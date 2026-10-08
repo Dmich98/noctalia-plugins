@@ -63,5 +63,14 @@
   "locations.херсонська": "Kherson Oblast",
   "locations.київська": "Kyiv Oblast",
   "locations.севастополь": "Sevastopol",
-  "locations.м. київ": "Kyiv"
+  "locations.м. київ": "Kyiv",
+  "settings.display_mode": "Display mode",
+  "settings.display_mode.icon": "Icon only",
+  "settings.display_mode.status": "Icon and status",
+  "settings.display_mode.location_status": "Icon, location and status",
+  "settings.color_mode": "Color mode",
+  "settings.color_mode.colored": "Colored",
+  "settings.color_mode.monochrome": "Monochrome",
+  "settings.display_mode.description": "Choose what the bar widget shows next to its icon.",
+  "settings.color_mode.description": "Use alert-level colors, or keep the widget colors from your theme."
 }

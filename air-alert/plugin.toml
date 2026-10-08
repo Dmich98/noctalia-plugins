@@ -12,6 +12,29 @@ entry = "service.luau"
 id = "air-alert"
 entry = "widget.luau"
 
+[[widget.setting]]
+key = "display_mode"
+type = "select"
+label_key = "settings.display_mode"
+description_key = "settings.display_mode.description"
+default = "location_status"
+options = [
+  { value = "icon", label_key = "settings.display_mode.icon" },
+  { value = "status", label_key = "settings.display_mode.status" },
+  { value = "location_status", label_key = "settings.display_mode.location_status" },
+]
+
+[[widget.setting]]
+key = "color_mode"
+type = "select"
+label_key = "settings.color_mode"
+description_key = "settings.color_mode.description"
+default = "monochrome"
+options = [
+  { value = "colored", label_key = "settings.color_mode.colored" },
+  { value = "monochrome", label_key = "settings.color_mode.monochrome" },
+]
+
 [[panel]]
 id = "alert-details"
 entry = "status-panel.luau"

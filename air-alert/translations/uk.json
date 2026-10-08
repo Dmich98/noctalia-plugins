@@ -63,5 +63,14 @@
   "locations.херсонська": "Херсонська область",
   "locations.київська": "Київська область",
   "locations.севастополь": "Севастополь",
-  "locations.м. київ": "м. Київ"
+  "locations.м. київ": "м. Київ",
+  "settings.display_mode": "Відображення",
+  "settings.display_mode.icon": "Лише іконка",
+  "settings.display_mode.status": "Іконка та статус",
+  "settings.display_mode.location_status": "Іконка, локація та статус",
+  "settings.color_mode": "Колірний режим",
+  "settings.color_mode.colored": "Кольоровий",
+  "settings.color_mode.monochrome": "Монохромний",
+  "settings.display_mode.description": "Виберіть, що показувати на панелі поруч з іконкою.",
+  "settings.color_mode.description": "Використовувати кольори рівня тривоги або кольори віджета з теми."
 }

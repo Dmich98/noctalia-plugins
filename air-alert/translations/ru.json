@@ -63,5 +63,14 @@
   "locations.херсонська": "Херсонская область",
   "locations.київська": "Киевская область",
   "locations.севастополь": "Севастополь",
-  "locations.м. київ": "г. Киев"
+  "locations.м. київ": "г. Киев",
+  "settings.display_mode": "Отображение",
+  "settings.display_mode.icon": "Только иконка",
+  "settings.display_mode.status": "Иконка и статус",
+  "settings.display_mode.location_status": "Иконка, локация и статус",
+  "settings.color_mode": "Цветовой режим",
+  "settings.color_mode.colored": "Цветной",
+  "settings.color_mode.monochrome": "Монохромный",
+  "settings.display_mode.description": "Выберите, что показывать в баре рядом с иконкой.",
+  "settings.color_mode.description": "Использовать цвета уровня тревоги или цвета виджета из темы."
 }
