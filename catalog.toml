@@ -1,7 +1,7 @@
 [[plugin]]
 id = "dmich/air-alert"
 name = "Air Alert"
-version = "0.1.0"
+version = "0.2.0"
 author = "dmich"
 description = "Air raid alerts in Ukraine from NEPTUN, with region and location selection."
 plugin_api = 22
