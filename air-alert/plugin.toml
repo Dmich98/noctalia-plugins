@@ -1,0 +1,27 @@
+id = "dmich/air-alert"
+name = "Air Alert"
+version = "0.1.0"
+plugin_api = 22
+author = "dmich"
+
+[[widget]]
+id = "air-alert"
+entry = "widget.luau"
+
+[[panel]]
+id = "alert-details"
+entry = "status-panel.luau"
+width = 380
+height = 420
+placement = "attached"
+open_near_click = true
+keyboard_focus = "exclusive"
+
+[[panel]]
+id = "location-picker"
+entry = "location-panel.luau"
+width = 380
+height = 70
+placement = "attached"
+open_near_click = true
+keyboard_focus = "exclusive"
