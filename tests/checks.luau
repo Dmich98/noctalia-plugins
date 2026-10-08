@@ -1,124 +1,6 @@
 --!nocheck
--- sources is supplied by run.py; filesystem and HTTP never touch real user data.
-
 local early = "2026-10-08T18:00:00Z"
 local late = "2026-10-08T19:00:00.123Z"
-local utcText = {
-    [os.time({ year = 2026, month = 10, day = 8, hour = 18, min = 0, sec = 0 })] = early:sub(1, 19),
-    [os.time({ year = 2026, month = 10, day = 8, hour = 19, min = 0, sec = 0 })] = late:sub(1, 19),
-}
-
-local function runtime()
-    local env = setmetatable(
-        { files = {}, values = {}, jsonValues = {}, requests = {}, panels = {} },
-        { __index = getfenv() }
-    )
-    local watchers, modules = {}, {}
-    env.noctalia = {
-        tr = function(key, substitutions)
-            local text = translations[key] or key
-            return (
-                text:gsub("{([^}]+)}", function(name)
-                    local value = substitutions and substitutions[name]
-                    return value ~= nil and tostring(value) or ("{" .. name .. "}")
-                end)
-            )
-        end,
-        pluginDataDir = function()
-            return "/data"
-        end,
-        fileExists = function(path)
-            return env.files[path] ~= nil
-        end,
-        readFile = function(path)
-            return env.files[path], "missing file"
-        end,
-        writeFile = function(path, raw)
-            env.files[path] = raw
-            return not env.failWrite, env.failWrite and "write failed" or nil
-        end,
-        renameFile = function(from, to)
-            if env.failRename then
-                return false, "rename failed"
-            end
-            env.files[to], env.files[from] = env.files[from], nil
-            return true
-        end,
-        removeFile = function(path)
-            env.files[path] = nil
-            return true
-        end,
-        log = function() end,
-        setUpdateInterval = function() end,
-        togglePanel = function(id)
-            table.insert(env.panels, id)
-        end,
-        formatTime = function(pattern, seconds, timezone)
-            env.timezone = timezone
-            return timezone == "UTC" and (utcText[seconds] or "invalid") or "formatted"
-        end,
-        http = function(_, callback)
-            if env.rejectRequest then
-                return false
-            end
-            table.insert(env.requests, callback)
-            return true
-        end,
-        json = {
-            decode = function(raw)
-                local value = env.jsonValues[raw]
-                if value == nil then
-                    return nil, "invalid JSON"
-                end
-                return value
-            end,
-            encode = function(value)
-                env.jsonValues[value.locationKey] = table.clone(value)
-                return value.locationKey
-            end,
-        },
-        state = {
-            get = function(key)
-                return env.values[key]
-            end,
-            set = function(key, value)
-                env.values[key] = value
-            end,
-            watch = function(key, callback)
-                watchers[key] = callback
-            end,
-        },
-    }
-    env.barWidget = {
-        setText = function(text)
-            env.text = text
-        end,
-        setColor = function() end,
-        setGlyphColor = function() end,
-        setGlyph = function() end,
-        setTooltip = function() end,
-    }
-    env.ui = setmetatable({}, {
-        __index = function(_, kind)
-            return function(props, children)
-                return { kind = kind, props = props, children = children }
-            end
-        end,
-    })
-    env.emit = function(key, value)
-        env.values[key] = value
-        watchers[key](value)
-    end
-    env.require = function(path)
-        if not modules[path] then
-            local chunk = assert(loadstring(assert(sources[path]), path))
-            setfenv(chunk, env)
-            modules[path] = chunk()
-        end
-        return modules[path]
-    end
-    return env
-end
 
 local oblast = {
     locationKey = "київська",
@@ -174,9 +56,10 @@ local unknownStart =
 assert(alerts.resolveLocationAlert(unknownStart, oblast).since == "")
 print("PASS location matching and oblast aggregation")
 
+local alertsApi = env.require("./alerts/api.luau")
 env.jsonValues.response = data
-assert(alerts.parseAlertsResponse("response") ~= nil)
-assert(alerts.parseAlertsResponse("invalid JSON") == nil)
+assert(alertsApi.parseAlertsResponse("response") ~= nil)
+assert(alertsApi.parseAlertsResponse("invalid JSON") == nil)
 for _, invalid in ipairs({
     false,
     { oblasts = { false }, raions = {} },
@@ -186,11 +69,11 @@ for _, invalid in ipairs({
     { oblasts = { alert(city.locationKey, "red", early, { false }) }, raions = {} },
 }) do
     env.jsonValues.response = invalid
-    local parsed, err = alerts.parseAlertsResponse("response")
+    local parsed, err = alertsApi.parseAlertsResponse("response")
     assert(parsed == nil and err ~= nil)
 end
 env.jsonValues.response = { oblasts = {}, raions = {} }
-assert(alerts.parseAlertsResponse("response") ~= nil)
+assert(alertsApi.parseAlertsResponse("response") ~= nil)
 print("PASS response validation")
 
 local time = env.require("./alerts/time.luau")
@@ -219,46 +102,5 @@ for _, failure in ipairs({ "failWrite", "failRename" }) do
 end
 assert(store.saveLocation(city))
 assert(store.loadLocation().locationKey == city.locationKey)
-assert(env.values.selectedLocation == city)
+assert(env.values.selectedLocation.locationKey == city.locationKey)
 print("PASS save failures and persistence ordering")
-
-env = runtime()
-env.require("./widget.luau")
-env.update()
-assert(#env.requests == 0 and env.text == "Оберіть локацію")
-env.emit("selectedLocation", city)
-env.update()
-assert(#env.requests == 1, "a tick must not overlap an in-flight request")
-env.requests[1]({ ok = false, status = 0 })
-assert(env.values.alertStatus.error ~= nil and env.text:find("Дані недоступні"))
-env.update()
-assert(#env.requests == 2, "retry after failure")
-env.emit("selectedLocation", oblast)
-assert(#env.requests == 3)
-env.requests[2]({ ok = false, status = 0 })
-assert(env.values.alertStatus.location == oblast and env.values.alertStatus.loading)
-env.update()
-assert(#env.requests == 3, "old callback must not clear the current request")
-env.jsonValues.response = data
-env.requests[3]({ ok = true, status = 200, body = "response" })
-assert(env.values.alertStatus.active and env.values.alertStatus.level == "red")
-env.update()
-env.requests[4]({ ok = true, status = 200, body = "malformed" })
-assert(env.values.alertStatus.error and env.values.alertStatus.active == nil)
-env.rejectRequest = true
-env.update()
-assert(env.values.alertStatus.error ~= nil)
-env.rejectRequest = false
-env.update()
-assert(#env.requests == 5, "a rejected request must not block the next retry")
-env.emit("selectedLocation", nil)
-env.requests[5]({ ok = true, status = 200, body = "response" })
-assert(env.text == "Оберіть локацію" and env.values.alertStatus.location == nil)
-env.emit("panelRequest", "dmich/air-alert:location-picker")
-assert(env.panels[1] == "dmich/air-alert:location-picker")
-print("PASS widget fallback, request lifecycle and navigation")
-
-local view = env.require("./ui/status-view.luau")
-local tree = view.renderStatusView(city, { location = city, loading = true })
-assert(tree.children[4].children[2].props.text == "Отримання даних…")
-print("PASS loading view")

@@ -1,5 +1,6 @@
 --!strict
 
+local alertsApi = require("./api.luau")
 local locations = require("../locations/catalog.luau")
 
 export type AlertState = {
@@ -11,6 +12,7 @@ export type AlertState = {
     oblast: string?,
     lastSuccessAt: number?,
     error: string?,
+    errorKind: alertsApi.ErrorKind?,
     loading: boolean,
 }
 

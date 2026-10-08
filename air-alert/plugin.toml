@@ -4,6 +4,10 @@ version = "0.1.0"
 plugin_api = 22
 author = "dmich"
 
+[[service]]
+id = "alerts"
+entry = "service.luau"
+
 [[widget]]
 id = "air-alert"
 entry = "widget.luau"
