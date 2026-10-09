@@ -1,7 +1,7 @@
 --!strict
 
 local levels: { [string]: { name: string, glyph: string, color: string } } = {
-    red = { name = "level.red", glyph = "alert-octagon", color = "#ef4444" },
+    red = { name = "level.red", glyph = "rocket", color = "#ef4444" },
     yellow = { name = "level.yellow", glyph = "alert-triangle", color = "#facc15" },
 }
 
@@ -10,7 +10,7 @@ local reasons = {
     ["Дронова загроза (жовтий рівень)"] = "reason.drone",
 }
 
-local safe = { glyph = "shield-check", color = "#22c55e" }
+local safe = { glyph = "brand-flightradar24", color = "#22c55e" }
 
 local function formatAlertLevel(level: string): string
     local info = levels[level]
