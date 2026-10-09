@@ -17,7 +17,7 @@ local function send(locationName: string, state: alertState.State): ()
         if since then
             body ..= "\n" .. noctalia.tr("label.since") .. ": " .. since
         end
-        if state.level == "red" then
+        if state.level == "yellow" or state.level == "red" then
             urgency = "critical"
         end
     end
@@ -27,6 +27,7 @@ local function send(locationName: string, state: alertState.State): ()
         body = body,
         urgency = urgency,
         icon = presentation.widgetGlyph,
+        timeout_ms = 15000,
     })
     if not payload then
         noctalia.log("Could not encode alert notification: " .. (err or "unknown error"))

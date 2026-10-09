@@ -7,7 +7,7 @@ Personal plugin source for Noctalia v5.
 - **[Air Alert](air-alert/)** — oblast-level alerts in Ukraine powered by [NEPTUN](https://neptun.in.ua/). Requires plugin API 24 or newer. Supports English, Ukrainian, and Russian.
 
 A single background service polls NEPTUN every 30 seconds after an oblast is selected and shares the status across all widget instances. The selection is saved in the plugin's data directory.
-It sends a notification when validated data shows an alert starting or ending in the selected oblast. Yellow alerts use normal urgency, red alerts use critical urgency, and notifications show the widget icon, alert level, and available reasons and start time. The first result after launch or a location change establishes the baseline without a notification.
+It sends a notification when validated data shows an alert starting or ending in the selected oblast. Yellow and red alerts use critical urgency; clear notifications use normal urgency. Notifications stay visible for 15 seconds and show the widget icon, alert level, and available reasons and start time. The first result after launch or a location change establishes the baseline without a notification.
 
 ## Installation
 

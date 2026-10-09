@@ -335,7 +335,8 @@ assert(
     service.notifications[1].body
         == "Повітряна тривога · Жовтий рівень\nПричини: Дрони\nОголошено: 09.10.2026 16:42"
 )
-assert(service.notifications[1].urgency == "normal")
+assert(service.notifications[1].urgency == "critical")
+assert(service.notifications[1].timeout_ms == 15000)
 assert(service.notifications[1].icon == "brand-flightradar24")
 assert(
     service.commands[1][1] == "noctalia"
@@ -558,6 +559,7 @@ assert(#notifying.notifications == 1)
 assert(notifying.notifications[1].summary == "Київська область")
 assert(notifying.notifications[1].body == "Тривоги немає")
 assert(notifying.notifications[1].urgency == "normal")
+assert(notifying.notifications[1].timeout_ms == 15000)
 assert(notifying.notifications[1].icon == "brand-flightradar24")
 assert(notifying.values.alertStatus.highlightUntilMs == 15000)
 assert(notifyingWidget.glyphColor == "#22c55e")
@@ -610,6 +612,7 @@ notifying.flush()
 assert(#notifying.notifications == 2)
 assert(notifying.notifications[2].body == "Повітряна тривога · Червоний рівень")
 assert(notifying.notifications[2].urgency == "critical")
+assert(notifying.notifications[2].timeout_ms == 15000)
 assert(notifying.notifications[2].icon == "brand-flightradar24")
 assert(notifyingWidget.glyphColor == "#ef4444")
 assert(notifying.values.alertStatus.kind == "alert")
