@@ -1,19 +1,6 @@
 --!nocheck
 
-return function(sources, translations, catalog)
-    local early = "2026-10-08T18:00:00Z"
-    local late = "2026-10-08T19:00:00.123Z"
-    local utcText = {
-        [os.time({ year = 2026, month = 10, day = 8, hour = 18, min = 0, sec = 0 })] = early:sub(
-            1,
-            19
-        ),
-        [os.time({ year = 2026, month = 10, day = 8, hour = 19, min = 0, sec = 0 })] = late:sub(
-            1,
-            19
-        ),
-    }
-
+return function(sources, translations)
     local function copy(value)
         if type(value) ~= "table" then
             return value
@@ -28,9 +15,9 @@ return function(sources, translations, catalog)
     local function runtime(shared)
         shared = shared
             or {
-                files = { ["locations/catalog.json"] = "catalog" },
+                files = {},
                 values = {},
-                jsonValues = { catalog = catalog },
+                jsonValues = {},
                 watchers = {},
                 queue = {},
             }
@@ -47,11 +34,19 @@ return function(sources, translations, catalog)
             values = shared.values,
             jsonValues = shared.jsonValues,
             requests = {},
+            notifications = {},
+            commands = {},
             panels = {},
             config = {},
             shared = shared,
+            now = 0,
         }, { __index = getfenv() })
         local watchers, modules = shared.watchers, {}
+        env.os = {
+            time = function()
+                return env.now
+            end,
+        }
         env.noctalia = {
             getConfig = function(key)
                 return env.config[key]
@@ -90,13 +85,32 @@ return function(sources, translations, catalog)
                 return true
             end,
             log = function() end,
-            setUpdateInterval = function() end,
+            runAsync = function(command)
+                table.insert(env.commands, command)
+                if type(command) == "table" and command[3] == "notification-show" then
+                    table.insert(env.notifications, copy(env.jsonValues[command[4]]))
+                end
+                return true
+            end,
+            nowMs = function()
+                return env.now * 1000
+            end,
+            isValidTimezone = function(zone)
+                return zone == "Europe/Kyiv"
+            end,
+            formatTime = function(pattern, seconds, zone)
+                assert(pattern == "%d.%m.%Y %H:%M" and zone == "Europe/Kyiv")
+                -- The integration fixtures are in October before Kyiv's DST change.
+                return os.date("!" .. pattern, seconds + 3 * 3600)
+            end,
+            notify = function(title, body)
+                table.insert(env.notifications, { title = title, body = body })
+            end,
+            setUpdateInterval = function(milliseconds)
+                env.updateInterval = milliseconds
+            end,
             togglePanel = function(id)
                 table.insert(env.panels, id)
-            end,
-            formatTime = function(pattern, seconds, timezone)
-                env.timezone = timezone
-                return timezone == "UTC" and (utcText[seconds] or "invalid") or "formatted"
             end,
             http = function(_, callback)
                 if env.rejectRequest then
@@ -114,6 +128,11 @@ return function(sources, translations, catalog)
                     return copy(value)
                 end,
                 encode = function(value)
+                    if value.summary then
+                        local key = "notification-" .. tostring(#env.commands + 1)
+                        env.jsonValues[key] = copy(value)
+                        return key
+                    end
                     env.jsonValues[value.locationKey] = copy(value)
                     return value.locationKey
                 end,
@@ -170,7 +189,9 @@ return function(sources, translations, catalog)
             render = function(tree)
                 env.tree = tree
             end,
-            setWantsSecondTicks = function() end,
+            setWantsSecondTicks = function(wants)
+                env.secondTicks = wants
+            end,
         }
         env.close = function()
             if env.onExit then

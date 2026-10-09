@@ -1,2 +1,5 @@
 .git
 noctalia.d.luau
+AGENTS.md
+.agents/
+skills-lock.json

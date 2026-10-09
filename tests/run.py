@@ -26,16 +26,8 @@ for path in sorted(plugin.rglob("*.luau")):
     code = re.sub(r'require\("([^"]+)"\)', resolve_require, path.read_text())
     code = json.dumps(code, ensure_ascii=False)
     sources.append(f"sources[{key}] = {code}")
-catalog = json.loads((plugin / "locations/catalog.json").read_text())
-sources.append("local catalog = {")
-for location in catalog:
-    fields = [f"[{json.dumps(key)}] = {json.dumps(value, ensure_ascii=False)}" for key, value in location.items()]
-    sources.append("{" + ", ".join(fields) + "},")
-sources.append("}")
-sources.append("local runtime = (function()\n" + (root / "tests/runtime.luau").read_text() + "\nend)()(sources, translations, catalog)")
+sources.append("local runtime = (function()\n" + (root / "tests/runtime.luau").read_text() + "\nend)()(sources, translations)")
 sources.append((root / "tests/checks.luau").read_text())
-sources.append((root / "tests/integration.luau").read_text())
-sources.append((root / "tests/navigation.luau").read_text())
 
 with tempfile.TemporaryDirectory(prefix="air-alert-tests-") as directory:
     script = Path(directory) / "checks.luau"

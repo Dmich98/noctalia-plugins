@@ -1,27 +1,29 @@
 --!strict
 
-local alertsApi = require("./api.luau")
-local locations = require("../locations/catalog.luau")
+export type ErrorCode = "network" | "invalid" | "request" | "timeout"
+-- clear.highlightUntilMs is a local presentation deadline, not NEPTUN's alert end time.
+export type State =
+    { kind: "unconfigured" }
+    | { kind: "loading", locationKey: string }
+    | { kind: "clear", locationKey: string, updatedAt: string?, highlightUntilMs: number? }
+    | {
+        kind: "alert",
+        locationKey: string,
+        level: string,
+        updatedAt: string?,
+        since: string?,
+        reasons: { string }?,
+    }
+    | { kind: "error", locationKey: string, code: ErrorCode }
 
-export type AlertState = {
-    location: locations.Location?,
-    active: boolean?,
-    since: string?,
-    level: string?,
-    reasons: { string }?,
-    oblast: string?,
-    lastSuccessAt: number?,
-    error: string?,
-    errorKind: alertsApi.ErrorKind?,
-    loading: boolean,
-}
-
-local function matchesLocation(state: AlertState?, location: locations.Location?): boolean
-    local previous = state and state.location
-    return previous ~= nil
-        and location ~= nil
-        and previous.locationKey == location.locationKey
-        and previous.locationType == location.locationType
+local function forLocation(state: State?, locationKey: string?): State
+    if not locationKey then
+        return { kind = "unconfigured" }
+    end
+    if not state or state.kind == "unconfigured" or state.locationKey ~= locationKey then
+        return { kind = "loading", locationKey = locationKey }
+    end
+    return state
 end
 
-return { stateKey = "alertStatus", matchesLocation = matchesLocation }
+return { key = "alertStatus", forLocation = forLocation }

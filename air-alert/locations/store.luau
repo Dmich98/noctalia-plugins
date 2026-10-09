@@ -1,6 +1,6 @@
 --!strict
 
-local locations = require("./catalog.luau")
+local catalog = require("./catalog.luau")
 local stateKey = "selectedLocation"
 
 local function configPath(): (string?, string?)
@@ -11,7 +11,7 @@ local function configPath(): (string?, string?)
     return directory .. "/config.json", nil
 end
 
-local function loadLocation(): locations.Location?
+local function load(): catalog.Location?
     local path, pathError = configPath()
     if not path then
         noctalia.log(pathError or "Cannot open plugin data directory")
@@ -25,35 +25,43 @@ local function loadLocation(): locations.Location?
         noctalia.log(readError or "Cannot read selected location")
         return nil
     end
-    local data, err = noctalia.json.decode(raw)
-    if typeof(data) ~= "table" or err then
-        noctalia.log(err or "Invalid location config")
+    local data, decodeError = noctalia.json.decode(raw)
+    if typeof(data) ~= "table" or decodeError then
+        noctalia.log(decodeError or "Invalid location config")
         return nil
     end
-    if
-        typeof(data.locationKey) ~= "string"
-        or data.locationKey == ""
-        or typeof(data.locationName) ~= "string"
-        or (data.locationType ~= "oblast" and data.locationType ~= "raion")
-    then
-        noctalia.log("Invalid saved location")
+    if typeof(data.locationKey) ~= "string" then
+        noctalia.log("Invalid saved location key")
         return nil
     end
-    return data :: locations.Location
+    local location = catalog.find(data.locationKey)
+    if not location then
+        noctalia.log("Unsupported saved location key")
+    end
+    return location
 end
 
-local function saveLocation(location: locations.Location): (boolean, string?)
+local function save(location: catalog.Location): (boolean, string?)
+    local supported = catalog.find(location.key)
+    if not supported then
+        return false, "Unsupported location"
+    end
     local path, pathError = configPath()
     if not path then
         return false, pathError
     end
-    local raw, encodeError = noctalia.json.encode(location)
+    -- Keep the previous config.json format readable after this rewrite.
+    local raw, encodeError = noctalia.json.encode({
+        locationKey = supported.key,
+        locationName = supported.name,
+        locationType = "oblast",
+    })
     if not raw then
         return false, encodeError
     end
     local temporaryPath = path .. ".tmp"
-    local saved, writeError = noctalia.writeFile(temporaryPath, raw)
-    if not saved then
+    local written, writeError = noctalia.writeFile(temporaryPath, raw)
+    if not written then
         noctalia.removeFile(temporaryPath)
         return false, writeError
     end
@@ -62,8 +70,8 @@ local function saveLocation(location: locations.Location): (boolean, string?)
         noctalia.removeFile(temporaryPath)
         return false, renameError
     end
-    noctalia.state.set(stateKey, location)
+    noctalia.state.set(stateKey, supported.key)
     return true, nil
 end
 
-return { stateKey = stateKey, loadLocation = loadLocation, saveLocation = saveLocation }
+return { stateKey = stateKey, load = load, save = save }

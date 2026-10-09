@@ -1,89 +1,114 @@
 --!strict
 --!nolint FunctionUnused
 
-local alertsApi = require("./alerts/api.luau")
-local alerts = require("./alerts/status.luau")
+local api = require("./alerts/api.luau")
+local status = require("./alerts/status.luau")
 local alertState = require("./alerts/state.luau")
-local locations = require("./locations/catalog.luau")
-local locationStore = require("./locations/store.luau")
+local catalog = require("./locations/catalog.luau")
+local store = require("./locations/store.luau")
+local notification = require("./notification.luau")
 
-local selectedLocation: locations.Location? = locationStore.loadLocation()
-local previousState: alertState.AlertState? = noctalia.state.get(alertState.stateKey)
-local lastSuccessAt = alertState.matchesLocation(previousState, selectedLocation)
-        and previousState
-        and previousState.lastSuccessAt
-    or nil
-local initialized = false
-local generation = 0
-local pendingRequest: number? = nil
+local selected = store.load()
+local needsInitialLoading = true
+local lastKnownActive: boolean? = nil
+local clearHighlightUntilMs: number? = nil
+local nextRequestId = 0
+local pending: number? = nil
+local pendingSince: number? = nil
+local REQUEST_TIMEOUT_SECONDS = 90
+local CLEAR_HIGHLIGHT_MS = 15000
 
-local function publishError(location: locations.Location, kind: alertsApi.ErrorKind): ()
-    noctalia.state.set(alertState.stateKey, {
-        location = location,
-        lastSuccessAt = lastSuccessAt,
-        error = noctalia.tr("error." .. kind),
-        errorKind = kind,
-        loading = false,
-    })
+local function publish(state: alertState.State): ()
+    noctalia.state.set(alertState.key, state)
+end
+
+local function refresh(): ()
+    local location = selected
+    if not location then
+        publish({ kind = "unconfigured" })
+        return
+    end
+    if pending then
+        -- A request that never calls back must not block later updates forever.
+        if pendingSince and os.time() - pendingSince >= REQUEST_TIMEOUT_SECONDS then
+            pending = nil
+            pendingSince = nil
+            publish({ kind = "error", locationKey = location.key, code = "timeout" })
+        end
+        return
+    end
+
+    nextRequestId += 1
+    local requestId = nextRequestId
+    pending = requestId
+    pendingSince = os.time()
+    if needsInitialLoading then
+        publish({ kind = "loading", locationKey = location.key })
+        needsInitialLoading = false
+    end
+    local accepted = api.fetch(function(data: api.Response?, errorCode: api.ErrorCode?): ()
+        if pending ~= requestId then
+            return
+        end
+        pending = nil
+        pendingSince = nil
+        if not data then
+            local code: alertState.ErrorCode = errorCode or "invalid"
+            publish({
+                kind = "error",
+                locationKey = location.key,
+                code = code,
+            })
+            return
+        end
+        local alert = status.forLocation(data, location.key)
+        local active = alert ~= nil
+        local nextState: alertState.State
+        if alert then
+            clearHighlightUntilMs = nil
+            nextState = {
+                kind = "alert",
+                locationKey = location.key,
+                level = alert.level,
+                updatedAt = data.updatedAt,
+                since = alert.since,
+                reasons = alert.reasons,
+            }
+        else
+            if lastKnownActive == true then
+                clearHighlightUntilMs = noctalia.nowMs() + CLEAR_HIGHLIGHT_MS
+            end
+            nextState = {
+                kind = "clear",
+                locationKey = location.key,
+                updatedAt = data.updatedAt,
+                highlightUntilMs = clearHighlightUntilMs,
+            }
+        end
+        publish(nextState)
+        if lastKnownActive ~= nil and lastKnownActive ~= active then
+            notification.send(catalog.displayName(location), nextState)
+        end
+        lastKnownActive = active
+    end)
+    if not accepted then
+        pending = nil
+        pendingSince = nil
+        publish({ kind = "error", locationKey = location.key, code = "request" })
+    end
 end
 
 function update(): ()
     noctalia.setUpdateInterval(30000)
-    local location = selectedLocation
-    if not location then
-        noctalia.state.set(alertState.stateKey, { loading = false })
-        return
-    end
-    if not initialized then
-        initialized = true
-        noctalia.state.set(alertState.stateKey, {
-            location = location,
-            loading = true,
-            lastSuccessAt = lastSuccessAt,
-        })
-    end
-    if pendingRequest then
-        return
-    end
-    generation += 1
-    local requestId = generation
-    pendingRequest = requestId
-    local accepted = alertsApi.fetchAlerts(
-        function(data: alertsApi.AlertsResponse?, kind: alertsApi.ErrorKind?): ()
-            -- A location change invalidates the old request, even after switching back.
-            if pendingRequest ~= requestId then
-                return
-            end
-            pendingRequest = nil
-            if not data then
-                publishError(location, kind or "decode")
-                return
-            end
-            local alert = alerts.resolveLocationAlert(data, location)
-            lastSuccessAt = os.time()
-            local state: alertState.AlertState = {
-                location = location,
-                active = alert ~= nil,
-                since = alert and alert.since,
-                level = alert and alert.level,
-                reasons = alert and alert.reasons,
-                oblast = alert and alert.oblast,
-                lastSuccessAt = lastSuccessAt,
-                loading = false,
-            }
-            noctalia.state.set(alertState.stateKey, state)
-        end
-    )
-    if not accepted then
-        pendingRequest = nil
-        publishError(location, "request")
-    end
+    refresh()
 end
 
-noctalia.state.watch(locationStore.stateKey, function(location: locations.Location?): ()
-    selectedLocation = location
-    pendingRequest = nil
-    lastSuccessAt = nil
-    initialized = false
-    update()
+noctalia.state.watch(store.stateKey, function(key: string?): ()
+    pending = nil
+    pendingSince = nil
+    selected = catalog.find(key)
+    needsInitialLoading = true
+    lastKnownActive = nil
+    clearHighlightUntilMs = nil
+    refresh()
 end)

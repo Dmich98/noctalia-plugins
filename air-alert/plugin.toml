@@ -1,7 +1,7 @@
 id = "dmich/air-alert"
 name = "Air Alert"
-version = "0.2.1"
-plugin_api = 22
+version = "0.3.0"
+plugin_api = 24
 author = "dmich"
 
 [[service]]
@@ -16,8 +16,7 @@ entry = "widget.luau"
 key = "display_mode"
 type = "select"
 label_key = "settings.display_mode"
-description_key = "settings.display_mode.description"
-default = "location_status"
+default = "status"
 options = [
   { value = "icon", label_key = "settings.display_mode.icon" },
   { value = "status", label_key = "settings.display_mode.status" },
@@ -28,7 +27,6 @@ options = [
 key = "color_mode"
 type = "select"
 label_key = "settings.color_mode"
-description_key = "settings.color_mode.description"
 default = "monochrome"
 options = [
   { value = "colored", label_key = "settings.color_mode.colored" },
@@ -37,18 +35,18 @@ options = [
 
 [[panel]]
 id = "alert-details"
-entry = "status-panel.luau"
-width = 380
-height = 420
+entry = "status-panel-entry.luau"
+width = 340
+height = 400
 placement = "attached"
 open_near_click = true
 keyboard_focus = "exclusive"
 
 [[panel]]
 id = "location-picker"
-entry = "location-panel.luau"
-width = 380
-height = 70
+entry = "location-panel-entry.luau"
+width = 340
+height = 130
 placement = "attached"
 open_near_click = true
 keyboard_focus = "exclusive"

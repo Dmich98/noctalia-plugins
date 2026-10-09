@@ -1,61 +1,59 @@
 --!strict
 
-local locations = require("../locations/catalog.luau")
+local api = require("./api.luau")
 local alertTime = require("./time.luau")
-local alertsApi = require("./api.luau")
 
-local function resolveLocationAlert(
-    data: alertsApi.AlertsResponse,
-    location: locations.Location
-): alertsApi.AlertRegion?
-    local result: alertsApi.AlertRegion? = nil
+local function forLocation(data: api.Response, locationKey: string): api.OblastAlert?
+    local result: api.OblastAlert? = nil
     local reasons: { string } = {}
-    local seen: { [string]: boolean } = {}
-    local levels: { [string]: number } = { yellow = 1, red = 2 }
+    local seenReasons: { [string]: boolean } = {}
+    local earliest: number? = nil
+    local allTimesKnown = true
 
-    local function include(alert: alertsApi.AlertRegion): ()
-        if not result then
-            result = table.clone(alert)
-        else
-            if (levels[alert.level] or 0) > (levels[result.level] or 0) then
-                result.level = alert.level
-            end
-            local start = alertTime.parseSince(alert.since)
-            local previousStart = alertTime.parseSince(result.since)
-            -- An unknown start must not become a made-up duration for the whole region.
-            if not start or not previousStart then
-                result.since = ""
-            elseif start < previousStart then
-                result.since = alert.since
+    local function include(alert: api.OblastAlert): ()
+        local selected: api.OblastAlert = result or { key = locationKey, level = alert.level }
+        if result then
+            local current = selected.level
+            local currentKnown = current == "red" or current == "yellow"
+            local incomingKnown = alert.level == "red" or alert.level == "yellow"
+            if (currentKnown and not incomingKnown) or (current == "yellow" and alert.level == "red") then
+                selected.level = alert.level
             end
         end
+        result = selected
+        local start = alertTime.toUnixSeconds(alert.since)
+        if not start then
+            allTimesKnown = false
+        elseif not earliest or start < earliest then
+            earliest = start
+            selected.since = alert.since
+        end
         for _, reason in ipairs(alert.reasons or {}) do
-            if not seen[reason] then
-                seen[reason] = true
+            if not seenReasons[reason] then
+                seenReasons[reason] = true
                 table.insert(reasons, reason)
             end
         end
     end
 
-    local regions = location.locationType == "raion" and data.raions or data.oblasts
-    for _, alert in ipairs(regions) do
-        if alert.key == location.locationKey then
+    for _, alert in ipairs(data.oblasts) do
+        if alert.key == locationKey then
             include(alert)
         end
     end
-    if location.locationType == "oblast" and location.locationName:find("область") then
-        for _, alert in ipairs(data.raions) do
-            if alert.oblast == location.locationName then
-                include(alert)
-            end
+    for _, alert in ipairs(data.raions) do
+        if alert.oblastKey == locationKey then
+            include(alert)
         end
     end
-    if result then
-        result.key = location.locationKey
-        result.name = location.locationName
-        result.reasons = reasons
+    local selected = result
+    if selected then
+        selected.reasons = reasons
+        if not allTimesKnown then
+            selected.since = nil
+        end
     end
-    return result
+    return selected
 end
 
-return { resolveLocationAlert = resolveLocationAlert }
+return { forLocation = forLocation }

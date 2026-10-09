@@ -1,94 +1,174 @@
 --!strict
 
-export type AlertRegion = {
+local alertTime = require("./time.luau")
+
+export type OblastAlert = {
     key: string,
-    name: string,
-    oblast: string,
-    since: string,
     level: string,
+    since: string?,
     reasons: { string }?,
 }
+export type RaionAlert = OblastAlert & { oblastKey: string }
+export type Response = { updatedAt: string?, oblasts: { OblastAlert }, raions: { RaionAlert } }
+export type ErrorCode = "network" | "invalid"
+export type Handler = (Response?, ErrorCode?) -> ()
 
-export type AlertsResponse = {
-    raions: { AlertRegion },
-    oblasts: { AlertRegion },
-}
-
-local function isArray(value: any, validItem: (any) -> boolean): boolean
-    if typeof(value) ~= "table" then
-        return false
+local function parseReasons(value: any): ({ string }?, boolean)
+    if value == nil then
+        return nil, true
     end
+    if typeof(value) ~= "table" then
+        return nil, false
+    end
+    local reasons: { string } = {}
     local count = 0
-    for index, item in pairs(value) do
+    for index, reason in pairs(value) do
         if
             typeof(index) ~= "number"
             or index % 1 ~= 0
             or index < 1
-            or index > #value
-            or not validItem(item)
+            or typeof(reason) ~= "string"
         then
-            return false
+            return nil, false
         end
         count += 1
+        reasons[index] = reason
     end
-    return count == #value
+    return reasons, count == #value
 end
 
-local function isAlert(value: any): boolean
-    return typeof(value) == "table"
-        and typeof(value.key) == "string"
-        and value.key ~= ""
-        and typeof(value.name) == "string"
-        and typeof(value.oblast) == "string"
-        and typeof(value.since) == "string"
-        and typeof(value.level) == "string"
-        and value.level ~= ""
-        and (
-            value.reasons == nil
-            or isArray(value.reasons, function(reason: any): boolean
-                return typeof(reason) == "string"
-            end)
-        )
+-- NEPTUN supplies parent names for raions; map those source values to catalog keys here.
+local oblastKeys: { [string]: string } = {
+    ["Автономна Республіка Крим"] = "автономна республіка крим",
+    ["Вінницька область"] = "вінницька",
+    ["Волинська область"] = "волинська",
+    ["Дніпропетровська область"] = "дніпропетровська",
+    ["Донецька область"] = "донецька",
+    ["Житомирська область"] = "житомирська",
+    ["Закарпатська область"] = "закарпатська",
+    ["Запорізька область"] = "запорізька",
+    ["Івано-Франківська область"] = "івано-франківська",
+    ["Київська область"] = "київська",
+    ["Кіровоградська область"] = "кіровоградська",
+    ["Луганська область"] = "луганська",
+    ["Львівська область"] = "львівська",
+    ["Миколаївська область"] = "миколаївська",
+    ["Одеська область"] = "одеська",
+    ["Полтавська область"] = "полтавська",
+    ["Рівненська область"] = "рівненська",
+    ["Сумська область"] = "сумська",
+    ["Тернопільська область"] = "тернопільська",
+    ["Харківська область"] = "харківська",
+    ["Херсонська область"] = "херсонська",
+    ["Хмельницька область"] = "хмельницька",
+    ["Черкаська область"] = "черкаська",
+    ["Чернівецька область"] = "чернівецька",
+    ["Чернігівська область"] = "чернігівська",
+    ["м. Київ"] = "м. київ",
+    ["Севастополь"] = "севастополь",
+}
+
+local function parse(body: string): (Response?, string?)
+    local decoded: any, decodeError = noctalia.json.decode(body)
+    if typeof(decoded) ~= "table" or decodeError then
+        return nil, decodeError or "Expected an object"
+    end
+    if typeof(decoded.oblasts) ~= "table" then
+        return nil, "Missing oblasts array"
+    end
+    if typeof(decoded.raions) ~= "table" then
+        return nil, "Missing raions array"
+    end
+    local oblasts: { OblastAlert } = {}
+    local count = 0
+    local seen: { [string]: boolean } = {}
+    for index, item in pairs(decoded.oblasts) do
+        if
+            typeof(index) ~= "number"
+            or index % 1 ~= 0
+            or index < 1
+            or typeof(item) ~= "table"
+            or typeof(item.key) ~= "string"
+            or item.key == ""
+            or typeof(item.level) ~= "string"
+            or item.level == ""
+            or seen[item.key]
+        then
+            return nil, "Invalid oblast alert"
+        end
+        local reasons, validReasons = parseReasons(item.reasons)
+        if not validReasons then
+            return nil, "Invalid alert reasons"
+        end
+        seen[item.key] = true
+        count += 1
+        oblasts[index] = {
+            key = item.key,
+            level = item.level,
+            since = alertTime.keepValid(item.since),
+            reasons = reasons,
+        }
+    end
+    if count ~= #decoded.oblasts then
+        return nil, "Sparse oblasts array"
+    end
+    local raions: { RaionAlert } = {}
+    count = 0
+    seen = {}
+    for index, item in pairs(decoded.raions) do
+        if
+            typeof(index) ~= "number"
+            or index % 1 ~= 0
+            or index < 1
+            or typeof(item) ~= "table"
+            or typeof(item.key) ~= "string"
+            or item.key == ""
+            or typeof(item.level) ~= "string"
+            or item.level == ""
+            or typeof(item.oblast) ~= "string"
+            or not oblastKeys[item.oblast]
+            or seen[item.key]
+        then
+            return nil, "Invalid raion alert"
+        end
+        local reasons, validReasons = parseReasons(item.reasons)
+        if not validReasons then
+            return nil, "Invalid raion alert reasons"
+        end
+        seen[item.key] = true
+        count += 1
+        raions[index] = {
+            key = item.key,
+            oblastKey = oblastKeys[item.oblast],
+            level = item.level,
+            since = alertTime.keepValid(item.since),
+            reasons = reasons,
+        }
+    end
+    if count ~= #decoded.raions then
+        return nil, "Sparse raions array"
+    end
+    return { updatedAt = alertTime.keepValid(decoded.updatedAt), oblasts = oblasts, raions = raions }, nil
 end
 
-local function parseAlertsResponse(body: string): (AlertsResponse?, string?)
-    local data, err = noctalia.json.decode(body)
-
-    if not data or err then
-        return nil, err or "Empty response"
-    end
-
-    if typeof(data) ~= "table" then
-        return nil, "Expected an alerts object"
-    end
-
-    if not isArray(data.oblasts, isAlert) or not isArray(data.raions, isAlert) then
-        return nil, "Invalid oblasts or raions alerts"
-    end
-
-    return data :: AlertsResponse, nil
-end
-
-export type ErrorKind = "fetch" | "decode" | "request"
-export type AlertsResponseHandler = (AlertsResponse?, ErrorKind?) -> ()
-
-local function fetchAlerts(onResponse: AlertsResponseHandler): boolean
+local function fetch(onResult: Handler): boolean
     return noctalia.http({
         url = "https://neptun.in.ua/api/v1/alerts",
         method = "GET",
         headers = { "Accept: application/json" },
     }, function(response: HttpResponse): ()
         if not response.ok or response.status ~= 200 then
-            onResponse(nil, "fetch")
+            onResult(nil, "network")
             return
         end
-        local data = parseAlertsResponse(response.body)
+        local data, err = parse(response.body)
         if not data then
-            onResponse(nil, "decode")
+            noctalia.log("Invalid NEPTUN response: " .. (err or "unknown error"))
+            onResult(nil, "invalid")
             return
         end
-        onResponse(data, nil)
+        onResult(data, nil)
     end)
 end
 
-return { parseAlertsResponse = parseAlertsResponse, fetchAlerts = fetchAlerts }
+return { parse = parse, fetch = fetch }
