@@ -10,7 +10,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parent.parent
 plugin = root / "air-alert"
 sources = ["local sources = {}"]
-translations = json.loads((plugin / "translations/uk.json").read_text())
+translations = json.loads((plugin / "translations/uk-UA.json").read_text())
 sources.append("local translations = {")
 for key, value in translations.items():
     sources.append(f"[{json.dumps(key, ensure_ascii=False)}] = {json.dumps(value, ensure_ascii=False)},")

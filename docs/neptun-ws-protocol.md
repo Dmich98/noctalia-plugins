@@ -149,8 +149,9 @@ stylua --check air-alert tests
 The original 10 regression groups and all four fixture integrity tests passed.
 The regression suite used the official Luau 0.743 portable CLI, extracted into
 `/tmp` after checking the release archive SHA-256. The plan's
-translation-path defect was already absent: both the runner and repository use
-`translations/uk.json`. No harness repair was needed. The baseline StyLua check
+translation-path defect was already absent at A03: both the runner and repository used
+`translations/uk.json`. No harness repair was needed then. After the Ukrainian locale
+rename was merged, the runner was updated to `translations/uk-UA.json`. The baseline StyLua check
 reported existing formatting differences in `alerts/api.luau`,
 `alerts/status.luau`, `notification.luau` and `tests/checks.luau`; these unrelated
 files were left unchanged.
