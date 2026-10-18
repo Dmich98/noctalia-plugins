@@ -34,7 +34,12 @@ return function(sources, translations)
             values = shared.values,
             jsonValues = shared.jsonValues,
             requests = {},
+            streams = {},
+            streamAttempts = 0,
+            executables = { websocat = true },
+            commandChecks = {},
             notifications = {},
+            logs = {},
             commands = {},
             panels = {},
             config = {},
@@ -84,7 +89,21 @@ return function(sources, translations)
                 env.files[path] = nil
                 return true
             end,
-            log = function() end,
+            log = function(message)
+                table.insert(env.logs, message)
+            end,
+            commandExists = function(name)
+                table.insert(env.commandChecks, name)
+                return env.executables[name] == true
+            end,
+            runStream = function(command, onLine)
+                env.streamAttempts += 1
+                if env.rejectStream then
+                    return false
+                end
+                table.insert(env.streams, { command = command, onLine = onLine })
+                return true
+            end,
             runAsync = function(command)
                 table.insert(env.commands, command)
                 if type(command) == "table" and command[3] == "notification-show" then
@@ -112,11 +131,13 @@ return function(sources, translations)
             togglePanel = function(id)
                 table.insert(env.panels, id)
             end,
-            http = function(_, callback)
-                if env.rejectRequest then
+            http = function(request, callback)
+                assert(env.allowGeoHttp, "HTTP is forbidden outside an explicit geolocation request")
+                assert(request.url == "https://api.noctalia.dev/geolocate")
+                if env.rejectHttp then
                     return false
                 end
-                table.insert(env.requests, callback)
+                table.insert(env.requests, { request = request, callback = callback })
                 return true
             end,
             json = {

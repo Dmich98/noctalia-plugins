@@ -1,0 +1,10 @@
+[
+  {
+    "name": "other-raion",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"updatedAt\":\"2026-10-09T15:56:37Z\",\"oblasts\":[],\"raions\":[{\"key\":\"бориспільський\",\"oblast\":\"Одеська область\",\"level\":\"red\"}]}}"
+  },
+  {
+    "name": "yellow-metadata",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"updatedAt\":\"2026-10-09T15:57:00Z\",\"oblasts\":[{\"key\":\"київська\",\"level\":\"yellow\",\"since\":\"2026-10-09T13:42:48Z\",\"reasons\":[\"Дрони\"]}],\"raions\":[]}}"
+  }
+]

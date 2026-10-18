@@ -1,0 +1,113 @@
+[
+  {
+    "name": "city-only",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"м. київ\",\"since\":\"2026-10-17T12:00:00Z\",\"level\":\"yellow\"}],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "м. київ": "yellow",
+      "київська": "clear"
+    }
+  },
+  {
+    "name": "raions-only",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[],\"raions\":[{\"key\":\"a\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T10:00:00Z\",\"reasons\":[\"Дрони\"],\"level\":\"yellow\"},{\"key\":\"b\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T11:00:00Z\",\"reasons\":[\"Ракети\",\"Дрони\"],\"level\":\"red\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "м. київ": "clear",
+      "київська": "red"
+    }
+  },
+  {
+    "name": "city-and-raions",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"м. київ\",\"since\":\"2026-10-17T12:00:00Z\",\"level\":\"yellow\"}],\"raions\":[{\"key\":\"a\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T10:00:00Z\",\"reasons\":[\"Дрони\"],\"level\":\"yellow\"},{\"key\":\"b\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T11:00:00Z\",\"reasons\":[\"Ракети\",\"Дрони\"],\"level\":\"red\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "м. київ": "yellow",
+      "київська": "red"
+    }
+  },
+  {
+    "name": "raions-reordered",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"м. київ\",\"since\":\"2026-10-17T12:00:00Z\",\"level\":\"yellow\"}],\"raions\":[{\"key\":\"b\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T11:00:00Z\",\"reasons\":[\"Ракети\",\"Дрони\"],\"level\":\"red\"},{\"key\":\"a\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T10:00:00Z\",\"reasons\":[\"Дрони\"],\"level\":\"yellow\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "м. київ": "yellow",
+      "київська": "red"
+    }
+  },
+  {
+    "name": "yellow",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"yellow\"}],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "yellow"
+    }
+  },
+  {
+    "name": "red",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"red\"}],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "red"
+    }
+  },
+  {
+    "name": "unknown-level",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"purple\"}],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "purple"
+    }
+  },
+  {
+    "name": "missing-level",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\"}],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "missing"
+    }
+  },
+  {
+    "name": "missing-with-known",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"red\"}],\"raions\":[{\"key\":\"a\",\"oblast\":\"Київська область\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "missing"
+    }
+  },
+  {
+    "name": "known-with-missing",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\"}],\"raions\":[{\"key\":\"b\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T11:00:00Z\",\"reasons\":[\"Ракети\",\"Дрони\"],\"level\":\"red\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "missing"
+    }
+  },
+  {
+    "name": "two-unknown",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"purple\"}],\"raions\":[{\"key\":\"a\",\"oblast\":\"Київська область\",\"level\":\"orange\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "orange"
+    }
+  },
+  {
+    "name": "unknown-with-missing",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"purple\"}],\"raions\":[{\"key\":\"a\",\"oblast\":\"Київська область\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "missing"
+    }
+  },
+  {
+    "name": "missing-start",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"київська\",\"level\":\"yellow\"}],\"raions\":[{\"key\":\"b\",\"oblast\":\"Київська область\",\"since\":\"2026-10-17T11:00:00Z\",\"reasons\":[\"Ракети\",\"Дрони\"],\"level\":\"red\"}],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "red"
+    }
+  },
+  {
+    "name": "empty",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "clear",
+      "м. київ": "clear",
+      "unsupported": "unsupported"
+    }
+  },
+  {
+    "name": "unmapped-territory",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T12:00:00Z\",\"data\":{\"oblasts\":[{\"key\":\"new-territory\",\"level\":\"red\"}],\"raions\":[],\"updatedAt\":\"2026-10-17T12:00:00Z\"}}",
+    "expected": {
+      "київська": "unknown"
+    }
+  }
+]

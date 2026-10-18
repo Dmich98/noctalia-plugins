@@ -1,6 +1,8 @@
 --!strict
 
-export type Location = { key: string, name: string }
+local raions = require("./raions.luau")
+
+export type Location = { key: string, name: string, sourceKey: string?, oblastKey: string? }
 
 -- Names and keys from https://neptun.in.ua/oblasts.geojson; geometry is not used.
 local all: { Location } = {
@@ -48,13 +50,22 @@ local function find(key: string?): Location?
             return location
         end
     end
+    for _, location in ipairs(raions) do
+        if location.key == key then
+            return location
+        end
+    end
     return nil
 end
 
 local function displayName(location: Location): string
+    if location.oblastKey then
+        local parent = find(location.oblastKey)
+        return location.name .. " · " .. (parent and displayName(parent) or location.oblastKey)
+    end
     local translationKey = "locations." .. location.key
     local translated = noctalia.tr(translationKey)
     return translated == translationKey and location.name or translated
 end
 
-return { all = all, find = find, displayName = displayName }
+return { all = all, raions = raions, find = find, displayName = displayName }

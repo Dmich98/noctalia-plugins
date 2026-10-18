@@ -1,5 +1,7 @@
 --!strict
 local alertState = require("../alerts/state.luau")
+local threatState = require("../alerts/threat-state.luau")
+local threatPresentation = require("../ui/threat-presentation.luau")
 local catalog = require("../locations/catalog.luau")
 local store = require("../locations/store.luau")
 local navigation = require("./navigation.luau")
@@ -8,6 +10,7 @@ local displayTime = require("../ui/time.luau")
 
 local selected: catalog.Location? = nil
 local current: alertState.State? = nil
+local currentThreats: threatState.State? = nil
 local isOpen = false
 
 local function openSource(): ()
@@ -47,45 +50,45 @@ local function render(): ()
             ui.label({ text = view.text, fontSize = 20, fontWeight = "bold", color = view.color }),
         }),
     }
-    if state.kind == "alert" then
-        table.insert(children, detailRow(noctalia.tr("label.level"), view.detail))
+    local details: alertState.LastKnown? = nil
+    if state.kind == "stale" then
+        table.insert(
+            children,
+            ui.label({
+                text = noctalia.tr("label.last_known"),
+                fontSize = 12,
+                color = "on_surface_variant",
+                maxLines = 2,
+            })
+        )
+        table.insert(
+            children,
+            ui.label({ text = view.detail, color = "on_surface_variant", maxLines = 2 })
+        )
+        details = state.lastKnown
+    elseif state.kind == "alert" then
+        details = state
+    end
+    if details and details.kind == "alert" then
+        table.insert(
+            children,
+            detailRow(noctalia.tr("label.level"), presentation.levelDetail(details.level))
+        )
         table.insert(
             children,
             detailRow(
                 noctalia.tr("label.since"),
-                displayTime.formatKyivTimestamp(state.since) or noctalia.tr("time.unavailable")
+                displayTime.formatKyivTimestamp(details.since) or noctalia.tr("time.unavailable")
             )
         )
-        table.insert(
-            children,
-            detailRow(
-                noctalia.tr("label.duration"),
-                displayTime.formatDuration(state.since) or noctalia.tr("time.unavailable")
-            )
-        )
-        if state.reasons and #state.reasons > 0 then
+        if state.kind == "alert" then
             table.insert(
                 children,
-                ui.label({ text = noctalia.tr("label.reasons"), fontSize = 16, fontWeight = "bold" })
+                detailRow(
+                    noctalia.tr("label.duration"),
+                    displayTime.formatDuration(state.since) or noctalia.tr("time.unavailable")
+                )
             )
-            for _, reason in ipairs(state.reasons) do
-                local reasonChildren: { UiNode } = {}
-                local glyph = presentation.glyphForReason(reason)
-                if glyph then
-                    table.insert(reasonChildren, ui.glyph({ name = glyph, size = 20 }))
-                end
-                table.insert(
-                    reasonChildren,
-                    ui.label({ text = reason, maxLines = 3, color = "on_surface_variant" })
-                )
-                table.insert(
-                    children,
-                    ui.row(
-                        { gap = 12, align = "center", paddingH = 12, paddingV = 4 },
-                        reasonChildren
-                    )
-                )
-            end
         end
     elseif state.kind == "error" then
         table.insert(
@@ -93,7 +96,74 @@ local function render(): ()
             ui.label({ text = view.detail, color = "on_surface_variant", maxLines = 2 })
         )
     end
-    if (state.kind == "alert" or state.kind == "clear") and state.updatedAt then
+    local targets = threatState.forLocation(currentThreats, location.key)
+    local threatTitle = noctalia.tr("threat.panel_title")
+    if targets.kind == "current" then
+        local substitutions: { [string]: string | number | boolean } = { count = #targets.threats }
+        threatTitle = noctalia.tr("threat.panel_title_count", substitutions)
+    end
+    table.insert(
+        children,
+        ui.label({
+            key = "current-threats-title",
+            text = threatTitle,
+            fontSize = 16,
+            fontWeight = "bold",
+        })
+    )
+    table.insert(children, ui.separator({ key = "current-threats-divider" }))
+    local threatChildren: { UiNode } = {}
+    if targets.kind == "current" and #targets.threats > 0 then
+        for index, threat in ipairs(targets.threats) do
+            local lines = threatPresentation.details(threat)
+            table.insert(
+                threatChildren,
+                ui.column({ gap = 2 }, {
+                    ui.label({
+                        key = "current-threat-title:" .. threat.id,
+                        text = lines[1],
+                        fontWeight = "bold",
+                        maxLines = 2,
+                    }),
+                    ui.label({
+                        key = "current-threat:" .. threat.id,
+                        text = table.concat(lines, "\n", 2),
+                        maxLines = 5,
+                        color = "on_surface_variant",
+                    }),
+                })
+            )
+            if index < #targets.threats then
+                table.insert(threatChildren, ui.separator({}))
+            end
+        end
+    else
+        local message = "threat.panel_loading"
+        if targets.kind == "current" then
+            message = "threat.panel_empty"
+        elseif targets.kind == "unavailable" then
+            message = "threat.panel_unavailable"
+        end
+        table.insert(
+            threatChildren,
+            ui.label({
+                key = "current-threats-status",
+                text = noctalia.tr(message),
+                maxLines = 3,
+                color = "on_surface_variant",
+            })
+        )
+    end
+    table.insert(
+        children,
+        ui.scroll({ key = "current-threats-scroll", height = 240, flexGrow = 1 }, {
+            ui.column({ gap = 8 }, threatChildren),
+        })
+    )
+    if
+        (state.kind == "alert" or state.kind == "clear" or state.kind == "stale")
+        and state.updatedAt
+    then
         table.insert(children, ui.separator({}))
         table.insert(
             children,
@@ -103,8 +173,8 @@ local function render(): ()
             )
         )
     end
-    panel.render(ui.column({ flexGrow = 1, gap = 10 }, {
-        ui.scroll({ flexGrow = 1 }, { ui.column({ gap = 8 }, children) }),
+    table.insert(
+        children,
         ui.row({ gap = 4, align = "center" }, {
             ui.label({
                 text = noctalia.tr("label.source"),
@@ -121,14 +191,16 @@ local function render(): ()
                 tooltip = "https://neptun.in.ua/",
                 onClick = openSource,
             }),
-        }),
-    }))
+        })
+    )
+    panel.render(ui.column({ flexGrow = 1, gap = 8 }, children))
 end
 
 local function onOpen(): ()
     isOpen = true
     selected = store.load()
     current = noctalia.state.get(alertState.key)
+    currentThreats = noctalia.state.get(threatState.key)
     render()
 end
 
@@ -145,9 +217,15 @@ noctalia.state.watch(alertState.key, function(state: alertState.State): ()
     render()
 end)
 
+noctalia.state.watch(threatState.key, function(state: threatState.State): ()
+    currentThreats = state
+    render()
+end)
+
 noctalia.state.watch(store.stateKey, function(key: string?): ()
     selected = catalog.find(key)
-    current = nil
+    current = noctalia.state.get(alertState.key)
+    currentThreats = noctalia.state.get(threatState.key)
     render()
 end)
 

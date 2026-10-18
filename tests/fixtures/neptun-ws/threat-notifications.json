@@ -1,0 +1,170 @@
+[
+  {
+    "name": "local",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "update-local",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Гнідин\",\"explanationShort\":\"БпЛА змінив курс\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":180,\"confidenceLevel\":\"high\",\"count\":3}}"
+  },
+  {
+    "name": "new-local",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"second-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "third-local",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"third-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "broad",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"broad\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"\",\"locality\":\"Київська область\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2,\"areaOnly\":true}}"
+  },
+  {
+    "name": "other-district",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"other-district\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Броварський район\",\"locality\":\"Бровари\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "outside",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"moving\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Львівська область\",\"district\":\"Львівський район\",\"locality\":\"Львів\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "moves-in",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"moving\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "advisory",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"advisory\",\"type\":\"mig31k\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2,\"advisory\":true}}"
+  },
+  {
+    "name": "unknown-type",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"unknown-type\",\"type\":\"future-threat\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":null,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "low-confidence",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"low-confidence\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"low\",\"count\":2}}"
+  },
+  {
+    "name": "stale",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"stale\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"stale\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "resolved",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"resolved\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"resolved\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "old",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"old\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-17T23:52:59Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "future",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"future\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:01:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "invalid-time",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"invalid-time\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"not-a-date\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "unknown-status",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"unknown-status\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"future-status\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "kyiv-city",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"kyiv-city\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"м. Київ\",\"district\":\"\",\"locality\":\"Київ\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "district-without-region",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"district-only\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "conflicting-parent",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"conflicting-parent\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Львівська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "unknown-region",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"unknown-region\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Unknown oblast\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "unknown-district",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"unknown-district\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Unknown district\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "invalid-district",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"invalid-district\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":123,\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "invalid-optional",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"invalid-optional\",\"type\":\"uav\",\"title\":{},\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":false,\"explanationShort\":[],\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":\"east\",\"confidenceLevel\":123,\"count\":-1}}"
+  },
+  {
+    "name": "invalid-heading",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"invalid-heading\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":360,\"confidenceLevel\":\"high\",\"count\":1.5}}"
+  },
+  {
+    "name": "north",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"north\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":0,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "no-time",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"no-time\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":null,\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "no-status",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"no-status\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":null,\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "latest-time",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"latest-time\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:01:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "after-recovery",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"after-recovery\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:02:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "snapshot",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"threats\":[{\"id\":\"baseline-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2},{\"id\":\"baseline-outside\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Львівська область\",\"district\":\"Львівський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}]}}"
+  },
+  {
+    "name": "reconnect",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"threats\":[{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}]}}"
+  },
+  {
+    "name": "empty-snapshot",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"threats\":[]}}"
+  },
+  {
+    "name": "remove",
+    "raw": "{\"type\":\"remove\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\"}}"
+  },
+  {
+    "name": "empty-alerts",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"raions\":[],\"oblasts\":[]}}"
+  },
+  {
+    "name": "timestamp-only",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:01Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "sub-degree",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90.2,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "one-degree",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":91,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "stale-known",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"stale\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "resolved-known",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Бориспіль\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"resolved\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "leave-known",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"new-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Львівська область\",\"district\":\"Львівський район\",\"locality\":\"Львів\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":90,\"confidenceLevel\":\"high\",\"count\":2}}"
+  },
+  {
+    "name": "baseline-update",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-18T00:00:00Z\",\"data\":{\"id\":\"baseline-local\",\"type\":\"uav\",\"title\":\"Шахед\",\"region\":\"Київська область\",\"district\":\"Бориспільський район\",\"locality\":\"Гнідин\",\"explanationShort\":\"БпЛА курсом на Бориспіль\",\"updatedAt\":\"2026-10-18T00:00:00Z\",\"status\":\"active\",\"heading\":180,\"confidenceLevel\":\"high\",\"count\":2}}"
+  }
+]

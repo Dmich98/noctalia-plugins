@@ -1,6 +1,10 @@
 --!strict
 
-export type ErrorCode = "network" | "invalid" | "request" | "timeout"
+export type ErrorCode = "network" | "invalid" | "dependency" | "stream"
+export type LastKnown =
+    { kind: "clear" }
+    | { kind: "alert", level: string?, since: string?, reasons: { string }? }
+
 -- clear.highlightUntilMs is a local presentation deadline, not NEPTUN's alert end time.
 export type State =
     { kind: "unconfigured" }
@@ -9,10 +13,17 @@ export type State =
     | {
         kind: "alert",
         locationKey: string,
-        level: string,
+        level: string?,
         updatedAt: string?,
         since: string?,
         reasons: { string }?,
+    }
+    | {
+        kind: "stale",
+        locationKey: string,
+        lastKnown: LastKnown,
+        updatedAt: string?,
+        syncedAtMs: number,
     }
     | { kind: "error", locationKey: string, code: ErrorCode }
 

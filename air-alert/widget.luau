@@ -18,7 +18,7 @@ end
 
 noctalia.state.watch(store.stateKey, function(key: string?): ()
     selected = catalog.find(key)
-    current = nil
+    current = noctalia.state.get(alertState.key)
     update()
 end)
 
@@ -35,7 +35,7 @@ end)
 
 local function openPanel(panelId: string): ()
     noctalia.state.set(navigation.ownerKey, tostring(owner))
-    noctalia.togglePanel("dmich/air-alert:" .. panelId)
+    noctalia.togglePanel(navigation.fullId(panelId))
 end
 
 function onClick(): ()

@@ -1,11 +1,19 @@
 --!nocheck
 
-local function reply(env, body)
-    if body.raions == nil then
-        body.raions = {}
+local function send(env, name)
+    local raw
+    for _, group in ipairs({ wsFixtures.service, wsFixtures.projection, wsFixtures.cases }) do
+        for _, case in ipairs(group) do
+            if case.name == name then
+                raw = case.raw
+            end
+        end
     end
-    env.jsonValues.response = body
-    return { ok = true, status = 200, body = "response" }
+    assert(raw, name)
+    for json, value in pairs(wsJsonValues) do
+        env.jsonValues[json] = value
+    end
+    assert(env.streams[1]).onLine(raw)
 end
 
 local function findNode(node, matches)
@@ -32,7 +40,6 @@ end
 
 local env = runtime()
 local catalog = env.require("./locations/catalog.luau")
-local api = env.require("./alerts/api.luau")
 local alertTime = env.require("./alerts/time.luau")
 local displayTime = env.require("./ui/time.luau")
 
@@ -81,116 +88,7 @@ assert(displayTime.formatDuration("2026-10-09T13:42:48Z") == "0 год 1 хв")
 env.now = 1791557033
 assert(displayTime.formatDuration("2026-10-09T13:42:48Z") == "1 год 1 хв")
 
-for _, invalid in ipairs({
-    false,
-    {},
-    { oblasts = false },
-    { oblasts = {} },
-    { oblasts = {}, raions = false },
-    { oblasts = {}, raions = { false } },
-    { oblasts = {}, raions = { { key = "kyivskyi", level = "red", oblast = "Unknown" } } },
-    {
-        oblasts = {},
-        raions = {
-            [2] = { key = "kyivskyi", level = "red", oblast = "Київська область" },
-        },
-    },
-    {
-        oblasts = {},
-        raions = {
-            { key = "a", level = "red", oblast = "Київська область" },
-            { key = "a", level = "yellow", oblast = "Київська область" },
-        },
-    },
-    {
-        oblasts = {},
-        raions = {
-            {
-                key = "a",
-                level = "red",
-                oblast = "Київська область",
-                reasons = { false },
-            },
-        },
-    },
-    { oblasts = { false }, raions = {} },
-    { oblasts = { { key = "київська" } }, raions = {} },
-    { oblasts = { { key = "київська", level = "" } }, raions = {} },
-    { oblasts = { { key = "київська", level = "red", reasons = { false } } }, raions = {} },
-    { oblasts = { [2] = { key = "київська", level = "red" } }, raions = {} },
-    {
-        oblasts = {
-            { key = "київська", level = "red" },
-            { key = "київська", level = "yellow" },
-        },
-        raions = {},
-    },
-}) do
-    env.jsonValues.bad = invalid
-    assert(api.parse("bad") == nil)
-end
-env.jsonValues.good = {
-    updatedAt = "2026-10-09T15:56:37.318472794Z",
-    oblasts = {
-        {
-            key = "м. київ",
-            level = "yellow",
-            since = "2026-10-09T13:55:17Z",
-            reasons = { "Дрони" },
-        },
-    },
-    raions = {
-        {
-            key = "kyivska:borispilskyi",
-            oblast = "Київська область",
-            level = "red",
-            since = "2026-10-09T12:00:00Z",
-            reasons = { "Ракети" },
-        },
-    },
-}
-local parsed = assert(api.parse("good"))
-assert(parsed.updatedAt == env.jsonValues.good.updatedAt)
-assert(parsed.oblasts[1].since == "2026-10-09T13:55:17Z")
-assert(parsed.oblasts[1].reasons[1] == "Дрони")
-local aggregate = env.require("./alerts/status.luau").forLocation
-assert(aggregate(parsed, "київська").level == "red")
-assert(env.require("./alerts/status.luau").forLocation(parsed, "м. київ").level == "yellow")
-assert(aggregate(parsed, "одеська") == nil)
-env.jsonValues.mixed = {
-    oblasts = {
-        {
-            key = "київська",
-            level = "yellow",
-            since = "2026-10-09T13:00:00Z",
-            reasons = { "Дрони" },
-        },
-    },
-    raions = {
-        {
-            key = "a",
-            oblast = "Київська область",
-            level = "red",
-            since = "2026-10-09T12:00:00Z",
-            reasons = { "Дрони", "Ракети" },
-        },
-        { key = "b", oblast = "Одеська область", level = "red" },
-    },
-}
-local mixed = assert(api.parse("mixed"))
-local combined = assert(aggregate(mixed, "київська"))
-assert(combined.level == "red" and combined.since == "2026-10-09T12:00:00Z")
-assert(
-    #combined.reasons == 2
-        and combined.reasons[1] == "Дрони"
-        and combined.reasons[2] == "Ракети"
-)
-assert(mixed.oblasts[1].level == "yellow" and mixed.raions[1].reasons[2] == "Ракети")
-env.jsonValues.mixed.raions[1].since = "invalid"
-assert(aggregate(assert(api.parse("mixed")), "київська").since == nil)
-env.jsonValues.mixed.raions[1].level = "purple"
-assert(aggregate(assert(api.parse("mixed")), "київська").level == "purple")
-print("PASS catalog, time and API validation")
+print("PASS catalog and time validation")
 
 env = runtime()
 local store = env.require("./locations/store.luau")
@@ -223,7 +121,7 @@ details.require("./status-panel-entry.luau")
 service.update()
 service.flush()
 assert(service.values.alertStatus.kind == "unconfigured")
-assert(#service.requests == 0)
+assert(#service.requests == 0 and service.streamAttempts == 0)
 first.update()
 assert(first.text == "Оберіть область")
 assert(first.glyph == "brand-flightradar24")
@@ -241,9 +139,13 @@ local select = assert(findNode(picker.tree, function(node)
 end)).props
 local index = assert(table.find(select.options, "Київська область")) - 1
 select.onChange(tostring(index))
+assert(service.values.selectedLocation == nil, "draft selection must not publish before saving")
+assert(findNode(picker.tree, function(node)
+    return node.props and node.props.key == "save-location"
+end)).props.onClick()
 service.flush()
-assert(#service.requests == 1 and service.values.alertStatus.kind == "loading")
-assert(#first.requests == 0 and #second.requests == 0)
+assert(service.streamAttempts == 1 and service.values.alertStatus.kind == "loading")
+assert(first.streamAttempts == 0 and second.streamAttempts == 0)
 assert(first.text == second.text and first.text == "Отримання даних…")
 assert(first.panels[2] == "dmich/air-alert:alert-details")
 assert(#second.panels == 0)
@@ -271,25 +173,14 @@ assert(findNode(details.tree, function(node)
     return node.kind == "button" and node.props.key ~= "source-link"
 end) == nil)
 service.update()
-assert(#service.requests == 1, "do not overlap an active request")
+assert(service.streamAttempts == 1, "ticks must not start additional streams")
 print("PASS initial selection, loading and shared service")
 
-local result = {
-    updatedAt = "2026-10-09T15:56:37Z",
-    oblasts = {},
-    raions = {
-        {
-            key = "бориспільський",
-            oblast = "Одеська область",
-            level = "red",
-        },
-    },
-}
-service.requests[1](reply(service, result))
+send(service, "other-raion")
 service.flush()
 assert(service.values.alertStatus.kind == "clear", "another oblast's raion must not match")
 assert(details.secondTicks == nil)
-assert(service.values.alertStatus.updatedAt == result.updatedAt)
+assert(service.values.alertStatus.updatedAt == "2026-10-09T15:56:37Z")
 assert(#service.notifications == 0, "the first confirmed status is a baseline")
 assert(first.glyph == "brand-flightradar24")
 assert(first.glyphColor == "on_surface" and first.color == "on_surface")
@@ -314,17 +205,7 @@ end) ~= nil)
 service.update()
 assert(service.values.alertStatus.kind == "clear" and first.glyphColor == "on_surface")
 details.now = 1791561480
-service.requests[2](reply(service, {
-    updatedAt = "2026-10-09T15:57:00Z",
-    oblasts = {
-        {
-            key = "київська",
-            level = "yellow",
-            since = "2026-10-09T13:42:48Z",
-            reasons = { "Дрони" },
-        },
-    },
-}))
+send(service, "yellow-metadata")
 service.flush()
 local alert = service.values.alertStatus
 assert(alert.kind == "alert" and alert.level == "yellow")
@@ -357,21 +238,14 @@ assert(findNode(details.tree, function(node)
 end) ~= nil)
 assert(findNode(details.tree, function(node)
     return node.kind == "label"
-        and node.props.text == "Причини"
-        and node.props.fontWeight == "bold"
-end) ~= nil)
-local reasonRow = assert(findNode(details.tree, function(node)
-    return node.kind == "row"
-        and node.props.paddingH == 12
-        and findNode(node, function(child)
-                return child.kind == "glyph" and child.props.name == "drone"
-            end)
-            ~= nil
+        and node.props.key == "current-threats-title"
+        and node.props.text == "Актуальні загрози"
 end))
-assert(reasonRow.props.gap == 12 and reasonRow.props.paddingV == 4)
-assert(findNode(reasonRow, function(node)
-    return node.kind == "glyph" and node.props.name == "drone" and node.props.color == nil
-end) ~= nil)
+assert(findNode(details.tree, function(node)
+    return node.kind == "label"
+        and node.props.key == "current-threats-status"
+        and node.props.text == "Очікування даних про загрози…"
+end), "official reasons do not substitute for the independent threat stream")
 assert(findNode(details.tree, function(node)
     return node.kind == "label"
         and node.props.text == "09.10.2026 16:42"
@@ -432,9 +306,7 @@ assert(first.color == "on_surface" and first.glyphColor == "#facc15")
 
 service.update()
 assert(service.values.alertStatus.kind == "alert" and first.glyphColor == "#facc15")
-service.requests[3](
-    reply(service, { oblasts = { { key = "київська", level = "purple" } } })
-)
+send(service, "unknown-level")
 service.flush()
 assert(service.values.alertStatus.kind == "alert" and service.values.alertStatus.level == "purple")
 assert(details.secondTicks == nil)
@@ -446,58 +318,34 @@ assert(first.color == "on_surface" and first.glyphColor == "on_surface_variant")
 
 service.update()
 assert(service.values.alertStatus.kind == "alert" and first.glyphColor == "on_surface_variant")
-service.requests[4]({ ok = false, status = 0, body = "" })
+send(service, "malformed-json")
 service.flush()
-assert(service.values.alertStatus.kind == "error" and first.glyph == "brand-flightradar24")
-assert(#service.notifications == 1)
-assert(first.glyphColor == "on_surface_variant")
-assert(tooltipValue(first.tooltip, "Статус") == "Дані недоступні")
-assert(
-    tooltipValue(first.tooltip, "Причина")
-        == "Не вдалося отримати дані від NEPTUN"
-)
-assert(tooltipValue(first.tooltip, "Рівень") == nil)
-service.update()
-assert(service.values.alertStatus.kind == "error" and first.glyph == "brand-flightradar24")
-service.requests[5]({ ok = true, status = 200, body = "malformed" })
-service.flush()
-assert(service.values.alertStatus.kind == "error" and service.values.alertStatus.code == "invalid")
-service.rejectRequest = true
-service.update()
-service.flush()
-assert(service.values.alertStatus.code == "request")
-service.rejectRequest = false
-print("PASS current status, metadata and request errors")
+assert(service.values.alertStatus.kind == "alert" and service.values.alertStatus.level == "purple")
+assert(#service.notifications == 1, "invalid events cannot change alert activity")
+print("PASS current status, metadata and invalid-event isolation")
 
-service.update()
-local oldCallback = service.requests[6]
 local serviceStore = service.require("./locations/store.luau")
 assert(serviceStore.save(catalog.find("м. київ")))
 service.flush()
-assert(#service.requests == 7)
+assert(service.values.alertStatus.kind == "clear" and first.glyphColor == "on_surface")
 assert(serviceStore.save(catalog.find("київська")))
 service.flush()
-assert(#service.requests == 8)
-oldCallback(reply(service, { oblasts = { { key = "київська", level = "red" } } }))
-assert(service.values.alertStatus.kind == "loading", "A → B → A old reply must be ignored")
-assert(#service.notifications == 1)
-service.requests[8](reply(service, { oblasts = {} }))
-service.flush()
-assert(service.values.alertStatus.kind == "clear")
-assert(#service.notifications == 1, "a location change establishes a new baseline")
-print("PASS delayed replies after location changes")
+assert(service.values.alertStatus.kind == "alert" and service.values.alertStatus.level == "purple")
+assert(service.streamAttempts == 1 and #service.notifications == 1)
+assert(tooltipValue(first.tooltip, "Регіон") == "Київська область")
+print("PASS immediate region changes including A → B → A without stream restart")
 
-service.update()
-local timedOutCallback = service.requests[9]
-service.now = 90
+service.now = 45
 service.update()
 service.flush()
-assert(service.values.alertStatus.kind == "error" and service.values.alertStatus.code == "timeout")
-service.update()
-assert(#service.requests == 10 and service.values.alertStatus.kind == "error")
-timedOutCallback(reply(service, { oblasts = { { key = "київська", level = "red" } } }))
-assert(service.values.alertStatus.kind == "error")
-print("PASS stalled request recovery")
+assert(service.values.alertStatus.kind == "stale")
+assert(first.glyphColor == "on_surface_variant")
+assert(tooltipValue(first.tooltip, "Рівень") == "Невідомий рівень: purple")
+assert(#service.notifications == 1 and service.streamAttempts == 1)
+send(service, "empty")
+service.flush()
+assert(service.values.alertStatus.kind == "clear" and #service.notifications == 2)
+print("PASS silent stream becomes stale and a fresh baseline recovers")
 
 second.config.display_mode = "icon"
 second.update()
@@ -526,7 +374,8 @@ restarted.jsonValues.saved =
     { locationKey = "м. київ", locationName = "old", locationType = "oblast" }
 restarted.require("./service.luau")
 restarted.update()
-assert(#restarted.requests == 1 and restarted.values.alertStatus.locationKey == "м. київ")
+assert(restarted.streamAttempts == 1 and restarted.values.alertStatus.locationKey == "м. київ")
+assert(restarted.files["/data/config.json"] == "saved")
 print("PASS saved oblast starts loading on launch")
 
 local notifying = runtime()
@@ -536,30 +385,26 @@ local notifyingWidget = runtime(notifying.shared)
 notifying.require("./service.luau")
 notifyingWidget.require("./widget.luau")
 notifying.update()
-notifying.requests[1](reply(notifying, {
-    oblasts = { { key = "київська", level = "red" } },
-}))
+send(notifying, "red")
 notifying.flush()
 assert(#notifying.notifications == 0, "an active alert at startup is the baseline")
 assert(notifyingWidget.glyphColor == "#ef4444")
 notifying.update()
-notifying.requests[2](reply(notifying, {
-    oblasts = { { key = "київська", level = "yellow" } },
-}))
+send(notifying, "yellow")
 notifying.flush()
 assert(#notifying.notifications == 0, "level changes do not notify")
 notifying.update()
-notifying.requests[3]({ ok = false, status = 0, body = "" })
+send(notifying, "snapshot-empty")
 notifying.flush()
-assert(#notifying.notifications == 0, "network errors do not notify")
+assert(#notifying.notifications == 0, "session boundaries do not notify")
 notifying.update()
-notifying.requests[4](reply(notifying, { oblasts = {} }))
+send(notifying, "empty")
 notifying.flush()
 assert(#notifying.notifications == 1)
 assert(notifying.notifications[1].summary == "Київська область")
 assert(notifying.notifications[1].body == "Тривоги немає")
 assert(notifying.notifications[1].urgency == "normal")
-assert(notifying.notifications[1].timeout_ms == 15000)
+assert(notifying.notifications[1].timeout_ms == 5000)
 assert(notifying.notifications[1].icon == "brand-flightradar24")
 assert(notifying.values.alertStatus.highlightUntilMs == 15000)
 assert(notifyingWidget.glyphColor == "#22c55e")
@@ -584,7 +429,7 @@ assert(secondNotifyingWidget.glyphColor == "#22c55e")
 assert(secondNotifyingWidget.updateInterval == 5000)
 notifying.now = 10
 notifying.update()
-notifying.requests[5](reply(notifying, { oblasts = {} }))
+send(notifying, "empty")
 notifying.flush()
 assert(#notifying.notifications == 1, "repeated clear results do not notify")
 assert(notifying.values.alertStatus.highlightUntilMs == 15000)
@@ -605,12 +450,13 @@ notifyingWidget.update()
 assert(notifyingWidget.color == "on_surface" and notifyingWidget.glyphColor == "on_surface")
 notifying.now = 15
 notifying.update()
-notifying.requests[6](reply(notifying, {
-    oblasts = { { key = "київська", level = "red" } },
-}))
+send(notifying, "red")
 notifying.flush()
 assert(#notifying.notifications == 2)
-assert(notifying.notifications[2].body == "Повітряна тривога · Червоний рівень")
+assert(
+    notifying.notifications[2].body
+        == "Повітряна тривога · Червоний рівень"
+)
 assert(notifying.notifications[2].urgency == "critical")
 assert(notifying.notifications[2].timeout_ms == 15000)
 assert(notifying.notifications[2].icon == "brand-flightradar24")
@@ -618,8 +464,8 @@ assert(notifyingWidget.glyphColor == "#ef4444")
 assert(notifying.values.alertStatus.kind == "alert")
 assert(notifying.require("./locations/store.luau").save(catalog.find("м. київ")))
 notifying.flush()
-assert(notifyingWidget.glyphColor == "on_surface_variant")
-notifying.requests[7](reply(notifying, { oblasts = {} }))
+assert(notifyingWidget.glyphColor == "on_surface")
+send(notifying, "empty")
 notifying.flush()
 assert(notifying.values.alertStatus.highlightUntilMs == nil)
 assert(notifyingWidget.glyphColor == "on_surface")
@@ -633,7 +479,8 @@ unknownNotification.require("./notification.luau").send("Київська обл
     level = "purple",
 })
 assert(
-    unknownNotification.notifications[1].body == "Повітряна тривога · Невідомий рівень: purple"
+    unknownNotification.notifications[1].body
+        == "Повітряна тривога · Невідомий рівень: purple"
 )
 assert(unknownNotification.notifications[1].urgency == "normal")
 assert(#unknownNotification.commands == 1)
@@ -643,18 +490,13 @@ raionService.files["/data/config.json"] = "selected"
 raionService.jsonValues.selected = { locationKey = "київська" }
 raionService.require("./service.luau")
 raionService.update()
-raionService.requests[1](reply(raionService, {
-    oblasts = {},
-    raions = {
-        { key = "kyivska:borispilskyi", oblast = "Київська область", level = "red" },
-    },
-}))
+send(raionService, "raions-only")
 raionService.flush()
 assert(raionService.values.alertStatus.kind == "alert")
 assert(raionService.values.alertStatus.level == "red")
 assert(#raionService.notifications == 0)
 raionService.update()
-raionService.requests[2](reply(raionService, { oblasts = {}, raions = {} }))
+send(raionService, "empty")
 raionService.flush()
 assert(raionService.values.alertStatus.kind == "clear")
 assert(
@@ -662,3 +504,121 @@ assert(
         and raionService.notifications[1].body == "Тривоги немає"
 )
 print("PASS raion-only alert and clear transition")
+
+for _, checked in ipairs({
+    service,
+    first,
+    second,
+    picker,
+    details,
+    restarted,
+    notifying,
+    raionService,
+}) do
+    assert(#checked.requests == 0, "no HTTP calls in any entry")
+end
+
+for _, failure in ipairs({ "dependency", "stream" }) do
+    local failed = runtime()
+    local widget = runtime(failed.shared)
+    failed.files["/data/config.json"] = "saved"
+    failed.jsonValues.saved = { locationKey = "київська" }
+    failed.executables.websocat = failure ~= "dependency"
+    failed.rejectStream = failure == "stream"
+    failed.require("./service.luau")
+    widget.require("./widget.luau")
+    failed.update()
+    failed.flush()
+    assert(failed.values.alertStatus.kind == "error" and failed.values.alertStatus.code == failure)
+    assert(widget.glyphColor == "on_surface_variant")
+    assert(
+        tooltipValue(widget.tooltip, "Причина") == failed.noctalia.tr("error." .. failure)
+    )
+    failed.executables.websocat = true
+    failed.rejectStream = false
+    for _ = 1, 3 do
+        failed.update()
+    end
+    assert(failed.require("./locations/store.luau").save(catalog.find("м. київ")))
+    failed.flush()
+    assert(failed.values.alertStatus.code == failure)
+    assert(#failed.commandChecks == 1 and #failed.streams == 0 and #failed.notifications == 0)
+end
+print("PASS service launch failures remain visible without starting extra streams")
+
+local waiting = runtime()
+waiting.files["/data/config.json"] = "saved"
+waiting.jsonValues.saved = { locationKey = "київська" }
+waiting.require("./service.luau")
+waiting.update()
+send(waiting, "snapshot-one")
+for _, raw in ipairs(wsFixtures["session-1"]) do
+    local event = assert(waiting.require("./alerts/events.luau").decode(raw))
+    if event.type == "heartbeat" then
+        waiting.streams[1].onLine(raw)
+    end
+end
+assert(waiting.values.alertStatus.kind == "loading" and #waiting.notifications == 0)
+waiting.now = 44
+waiting.update()
+assert(waiting.values.alertStatus.kind == "loading")
+send(waiting, "malformed-json")
+waiting.now = 45
+waiting.update()
+assert(waiting.values.alertStatus.kind == "error")
+assert(waiting.logs[#waiting.logs] == "Ignored invalid NEPTUN stream message: json")
+send(waiting, "missing-level")
+assert(waiting.values.alertStatus.kind == "alert" and waiting.values.alertStatus.level == nil)
+assert(#waiting.notifications == 0, "the first official baseline still does not notify")
+local unchanged = waiting.values.alertStatus
+send(waiting, "missing-level")
+assert(waiting.values.alertStatus == unchanged, "equivalent official sets do not republish state")
+send(waiting, "snapshot-empty")
+assert(waiting.values.alertStatus.kind == "stale" and #waiting.notifications == 0)
+send(waiting, "missing-level")
+assert(waiting.values.alertStatus.kind == "alert" and #waiting.notifications == 0)
+waiting.now = 90
+-- A heartbeat arriving before the next timer tick cannot conceal a long gap.
+for _, raw in ipairs(wsFixtures["session-1"]) do
+    local event = assert(waiting.require("./alerts/events.luau").decode(raw))
+    if event.type == "heartbeat" then
+        waiting.streams[1].onLine(raw)
+    end
+end
+assert(waiting.values.alertStatus.kind == "stale")
+assert(waiting.require("./locations/store.luau").save(catalog.find("м. київ")))
+waiting.flush()
+assert(waiting.values.alertStatus.kind == "stale")
+send(waiting, "city-only")
+assert(
+    waiting.values.alertStatus.locationKey == "м. київ"
+        and waiting.values.alertStatus.level == "yellow"
+)
+assert(#waiting.notifications == 0 and waiting.streamAttempts == 1)
+send(waiting, "unmapped-territory")
+assert(waiting.values.alertStatus.kind == "error" and waiting.values.alertStatus.code == "invalid")
+assert(#waiting.notifications == 0)
+print("PASS incomplete sync, malformed input, reconnect and heartbeat freshness gates")
+
+-- Another runtime can publish the new projection before this runtime handles selection.
+local reorderedWidget = runtime()
+reorderedWidget.files["/data/config.json"] = "saved"
+reorderedWidget.jsonValues.saved = { locationKey = "київська" }
+local reorderedPanel = runtime(reorderedWidget.shared)
+reorderedWidget.require("./widget.luau")
+reorderedPanel.require("./status-panel-entry.luau")
+reorderedPanel.onOpen()
+reorderedWidget.emit(
+    "alertStatus",
+    { kind = "alert", locationKey = "м. київ", level = "yellow" }
+)
+reorderedWidget.emit("selectedLocation", "м. київ")
+assert(
+    reorderedWidget.text == "Повітряна тривога"
+        and reorderedWidget.glyphColor == "#facc15"
+)
+assert(tooltipValue(reorderedWidget.tooltip, "Регіон") == "м. Київ")
+assert(findNode(reorderedPanel.tree, function(node)
+    return node.kind == "label" and node.props.text == "Жовтий рівень"
+end) ~= nil)
+print("PASS projection delivered before selection remains visible in widgets and panels")

@@ -54,7 +54,7 @@ local function save(location: catalog.Location): (boolean, string?)
     local raw, encodeError = noctalia.json.encode({
         locationKey = supported.key,
         locationName = supported.name,
-        locationType = "oblast",
+        locationType = supported.oblastKey and "raion" or "oblast",
     })
     if not raw then
         return false, encodeError

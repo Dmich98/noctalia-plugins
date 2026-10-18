@@ -3,5 +3,5 @@ id = "dmich/air-alert"
 name = "Air Alert"
 version = "0.3.1"
 author = "dmich"
-description = "Oblast-level air raid alerts in Ukraine from NEPTUN."
+description = "Oblast and district air raid alerts in Ukraine from NEPTUN."
 plugin_api = 24

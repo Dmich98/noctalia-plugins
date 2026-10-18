@@ -1,0 +1,92 @@
+[
+  {
+    "name": "empty-alerts",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"raions\":[],\"oblasts\":[]}}"
+  },
+  {
+    "name": "missing-alert-metadata",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"name\":\"м. Київ\",\"oblast\":\"м. Київ\"}]}}"
+  },
+  {
+    "name": "unknown-alert-level",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"name\":\"м. Київ\",\"oblast\":\"м. Київ\",\"level\":\"purple\"}]}}"
+  },
+  {
+    "name": "unknown-extra-fields",
+    "expected": "accept",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"threats\":[],\"futureField\":true}}"
+  },
+  {
+    "name": "malformed-json",
+    "expected": "reject",
+    "raw": "{\"type\":"
+  },
+  {
+    "name": "scalar-envelope",
+    "expected": "reject",
+    "raw": "false"
+  },
+  {
+    "name": "array-envelope",
+    "expected": "reject",
+    "raw": "[]"
+  },
+  {
+    "name": "missing-type",
+    "expected": "reject",
+    "raw": "{\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{}}"
+  },
+  {
+    "name": "non-string-type",
+    "expected": "reject",
+    "raw": "{\"type\":7,\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{}}"
+  },
+  {
+    "name": "missing-threats",
+    "expected": "reject",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{}}"
+  },
+  {
+    "name": "non-array-threats",
+    "expected": "reject",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"threats\":false}}"
+  },
+  {
+    "name": "missing-raions",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"oblasts\":[]}}"
+  },
+  {
+    "name": "missing-oblasts",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"raions\":[]}}"
+  },
+  {
+    "name": "null-alerts",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"raions\":null,\"oblasts\":[]}}"
+  },
+  {
+    "name": "upsert-missing-id",
+    "expected": "reject",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{}}"
+  },
+  {
+    "name": "remove-missing-id",
+    "expected": "reject",
+    "raw": "{\"type\":\"remove\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{}}"
+  },
+  {
+    "name": "remove-numeric-id",
+    "expected": "reject",
+    "raw": "{\"type\":\"remove\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{\"id\":7}}"
+  },
+  {
+    "name": "future-event",
+    "expected": "ignore",
+    "raw": "{\"type\":\"future-event\",\"ts\":\"2026-10-17T19:50:51.007Z\",\"data\":{}}"
+  }
+]

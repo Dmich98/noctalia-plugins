@@ -1,0 +1,167 @@
+[
+  {
+    "name": "objects-instead-of-alert-arrays",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":{},\"oblasts\":{}}}"
+  },
+  {
+    "name": "null-in-alert-array",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[null]}}"
+  },
+  {
+    "name": "trailing-null-alert",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\"},null]}}"
+  },
+  {
+    "name": "null-in-threat-array",
+    "expected": "reject",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"threats\":[null]}}"
+  },
+  {
+    "name": "object-instead-of-threat-array",
+    "expected": "reject",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"threats\":{}}}"
+  },
+  {
+    "name": "object-instead-of-reasons",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"reasons\":{}}]}}"
+  },
+  {
+    "name": "trailing-null-reason",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"reasons\":[\"test\",null]}]}}"
+  },
+  {
+    "name": "duplicate-alert-key",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\"},{\"key\":\"м. київ\"}]}}"
+  },
+  {
+    "name": "duplicate-threat-id",
+    "expected": "reject",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"threats\":[{\"id\":\"a\",\"type\":\"uav\"},{\"id\":\"a\",\"type\":\"uav\"}]}}"
+  },
+  {
+    "name": "raion-missing-parent",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[{\"key\":\"бориспільський\"}],\"oblasts\":[]}}"
+  },
+  {
+    "name": "invalid-level-type",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"level\":false}]}}"
+  },
+  {
+    "name": "invalid-optional-boolean",
+    "expected": "reject",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"id\":\"a\",\"type\":\"uav\",\"advisory\":1}}"
+  },
+  {
+    "name": "missing-envelope-time",
+    "expected": "reject",
+    "raw": "{\"type\":\"heartbeat\",\"ts\":null}"
+  },
+  {
+    "name": "invalid-envelope-time",
+    "expected": "reject",
+    "raw": "{\"type\":\"heartbeat\",\"ts\":\"2026-02-30T00:00:00Z\"}"
+  },
+  {
+    "name": "invalid-optional-times",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"since\":\"bad\"}],\"updatedAt\":\"bad\"}}"
+  },
+  {
+    "name": "unknown-parent",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[{\"key\":\"unmapped-raion\",\"oblast\":\"Unknown parent\"}],\"oblasts\":[]}}"
+  },
+  {
+    "name": "snapshot-empty",
+    "expected": "accept",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"threats\":[]}}"
+  },
+  {
+    "name": "snapshot-one",
+    "expected": "accept",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"threats\":[{\"id\":\"a\",\"type\":\"uav\",\"advisory\":false,\"areaOnly\":false}]}}"
+  },
+  {
+    "name": "upsert-same",
+    "expected": "accept",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"id\":\"a\",\"type\":\"uav\",\"advisory\":false,\"areaOnly\":false}}"
+  },
+  {
+    "name": "upsert-changed",
+    "expected": "accept",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"id\":\"a\",\"type\":\"future-threat\",\"advisory\":true}}"
+  },
+  {
+    "name": "remove-a",
+    "expected": "accept",
+    "raw": "{\"type\":\"remove\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"id\":\"a\"}}"
+  },
+  {
+    "name": "remove-unknown",
+    "expected": "accept",
+    "raw": "{\"type\":\"remove\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"id\":\"unknown\"}}"
+  },
+  {
+    "name": "invalid-threat-time",
+    "expected": "accept",
+    "raw": "{\"type\":\"upsert\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"id\":\"a\",\"type\":\"uav\",\"updatedAt\":\"bad\"}}"
+  },
+  {
+    "name": "alerts-two",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[{\"key\":\"b\",\"oblast\":\"Київська область\",\"level\":\"red\"}],\"oblasts\":[{\"key\":\"м. київ\",\"level\":\"yellow\",\"reasons\":[\"b\",\"a\"]},{\"key\":\"київська\",\"level\":\"purple\"}]}}"
+  },
+  {
+    "name": "alerts-reordered",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[{\"key\":\"b\",\"oblast\":\"Київська область\",\"level\":\"red\"}],\"oblasts\":[{\"key\":\"київська\",\"level\":\"purple\"},{\"key\":\"м. київ\",\"level\":\"yellow\",\"reasons\":[\"a\",\"b\"]}]}}"
+  },
+  {
+    "name": "alerts-replacement",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"київська\",\"level\":\"red\"}]}}"
+  },
+  {
+    "name": "escaped-brackets",
+    "expected": "accept",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"м. київ\",\"reasons\":[\"[x] \\\"quoted\\\" \\\\ end\",\"\\\\\\\"[]\",\"[]\",\"line\\nnext\"]}]}}"
+  },
+  {
+    "name": "numeric-string-array-index",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":{},\"oblasts\":{\"1\":{\"key\":\"м. київ\"}}}}"
+  },
+  {
+    "name": "null-between-valid-alerts",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[{\"key\":\"a\"},null,{\"key\":\"b\"},null,{\"key\":\"c\"}]}}"
+  },
+  {
+    "name": "invalid-version",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\":[],\"version\":\"not a version\"}}"
+  },
+  {
+    "name": "nul-in-raions-key",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"oblasts\":[],\"raions\\u0000suffix\":[]}}"
+  },
+  {
+    "name": "nul-in-oblasts-key",
+    "expected": "reject",
+    "raw": "{\"type\":\"alerts\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"raions\":[],\"oblasts\\u0000suffix\":[]}}"
+  },
+  {
+    "name": "literal-nul-escape-in-key",
+    "expected": "accept",
+    "raw": "{\"type\":\"snapshot\",\"ts\":\"2026-10-17T19:50:57.786Z\",\"data\":{\"threats\":[],\"future\\\\u0000field\":true}}"
+  }
+]

@@ -34,6 +34,15 @@ local function widgetText(mode: string?, status: string, region: string?): strin
     return (displayModes[mode or ""] or displayModes.status)(status, region)
 end
 
+local function levelDetail(level: string?): string
+    local known = level and levels[level]
+    if known then
+        return noctalia.tr(known.label)
+    end
+    local unknown = noctalia.tr("level.unknown")
+    return level and unknown .. ": " .. level or unknown
+end
+
 local function forState(state: alertState.State): View
     if state.kind == "unconfigured" then
         local text = noctalia.tr("location.choose")
@@ -51,17 +60,27 @@ local function forState(state: alertState.State): View
             detail = noctalia.tr("error." .. state.code),
         }
     end
+    if state.kind == "stale" then
+        return {
+            text = noctalia.tr("status.stale"),
+            glyph = "wifi-off",
+            color = "on_surface_variant",
+            detail = noctalia.tr(
+                state.lastKnown.kind == "alert" and "status.alert" or "status.safe"
+            ),
+        }
+    end
     if state.kind == "clear" then
         local text = noctalia.tr("status.safe")
         return { text = text, glyph = "shield-check", color = "#22c55e", detail = text }
     end
-    local knownLevel = levels[state.level]
+    local knownLevel = state.level and levels[state.level]
     if knownLevel then
         return {
             text = noctalia.tr("status.alert"),
             glyph = "alert-triangle",
             color = knownLevel.color,
-            detail = noctalia.tr(knownLevel.label),
+            detail = levelDetail(state.level),
         }
     end
     local unknown = noctalia.tr("level.unknown")
@@ -69,7 +88,7 @@ local function forState(state: alertState.State): View
         text = noctalia.tr("status.alert") .. " · " .. unknown,
         glyph = "alert-triangle",
         color = "on_surface_variant",
-        detail = unknown .. ": " .. state.level,
+        detail = levelDetail(state.level),
     }
 end
 
@@ -86,11 +105,19 @@ local function tooltipRows(
         key = noctalia.tr("label.status"),
         value = state.kind == "alert" and noctalia.tr("status.alert") or view.text,
     })
-    if state.kind == "alert" then
-        table.insert(rows, { key = noctalia.tr("label.level"), value = view.detail })
+    local details: alertState.LastKnown? = nil
+    if state.kind == "stale" then
+        table.insert(rows, { key = noctalia.tr("label.last_known"), value = view.detail })
+        details = state.lastKnown
+    elseif state.kind == "alert" then
+        details = state
+    end
+    if details and details.kind == "alert" then
+        table.insert(rows, { key = noctalia.tr("label.level"), value = levelDetail(details.level) })
         table.insert(rows, {
             key = noctalia.tr("label.since"),
-            value = displayTime.formatKyivTimestamp(state.since) or noctalia.tr("time.unavailable"),
+            value = displayTime.formatKyivTimestamp(details.since)
+                or noctalia.tr("time.unavailable"),
         })
     elseif state.kind == "error" then
         table.insert(rows, { key = noctalia.tr("label.reason"), value = view.detail })
@@ -105,6 +132,7 @@ end
 return {
     widgetGlyph = "brand-flightradar24",
     forState = forState,
+    levelDetail = levelDetail,
     glyphForReason = glyphForReason,
     tooltipRows = tooltipRows,
     widgetText = widgetText,

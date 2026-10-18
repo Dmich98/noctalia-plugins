@@ -4,6 +4,26 @@ version = "0.3.1"
 plugin_api = 24
 author = "dmich"
 
+[[setting]]
+key = "panel_placement"
+type = "select"
+label_key = "settings.panel_placement"
+default = "floating"
+options = [
+  { value = "floating", label_key = "settings.panel_placement.floating" },
+  { value = "attached", label_key = "settings.panel_placement.attached" },
+]
+
+[[setting]]
+key = "threat_notifications"
+type = "select"
+label_key = "settings.threat_notifications"
+default = "new_and_updates"
+options = [
+  { value = "new_only", label_key = "settings.threat_notifications.new_only" },
+  { value = "new_and_updates", label_key = "settings.threat_notifications.new_and_updates" },
+]
+
 [[service]]
 id = "alerts"
 entry = "service.luau"
@@ -36,9 +56,9 @@ options = [
 [[panel]]
 id = "alert-details"
 entry = "status-panel-entry.luau"
-width = 340
-height = 400
-placement = "attached"
+width = 450
+height = 600
+placement = "floating"
 open_near_click = true
 keyboard_focus = "exclusive"
 
@@ -46,7 +66,26 @@ keyboard_focus = "exclusive"
 id = "location-picker"
 entry = "location-panel-entry.luau"
 width = 340
-height = 130
+height = 380
+placement = "floating"
+open_near_click = true
+keyboard_focus = "exclusive"
+
+# API 24 fixes placement per entry; navigation selects the shared setting's variant.
+[[panel]]
+id = "alert-details-attached"
+entry = "status-panel-entry.luau"
+width = 450
+height = 600
+placement = "attached"
+open_near_click = true
+keyboard_focus = "exclusive"
+
+[[panel]]
+id = "location-picker-attached"
+entry = "location-panel-entry.luau"
+width = 340
+height = 380
 placement = "attached"
 open_near_click = true
 keyboard_focus = "exclusive"

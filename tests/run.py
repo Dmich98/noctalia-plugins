@@ -27,7 +27,71 @@ for path in sorted(plugin.rglob("*.luau")):
     code = json.dumps(code, ensure_ascii=False)
     sources.append(f"sources[{key}] = {code}")
 sources.append("local runtime = (function()\n" + (root / "tests/runtime.luau").read_text() + "\nend)()(sources, translations)")
+
+
+def luau_value(value):
+    if value is None:
+        return "nil"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, str):
+        # Fixed-width decimal escapes preserve control characters and literal JSON escapes.
+        return '"' + "".join(
+            "\\\\" if char == "\\" else '\\"' if char == '"'
+            else f"\\{ord(char):03}" if ord(char) < 32 else char for char in value
+        ) + '"'
+    if isinstance(value, (int, float)):
+        return repr(value)
+    # Match host object keys passed through lua_setfield's NUL-terminated name.
+    entries = enumerate(value, 1) if isinstance(value, list) else (
+        (key.split("\0", 1)[0], item) for key, item in value.items()
+    )
+    return "{" + ",".join(f"[{luau_value(key)}]={luau_value(item)}" for key, item in entries) + "}"
+
+
+def tagged_json(raw):
+    # Independent reference transform: match whole strings before structural brackets.
+    def replace(match):
+        token = match.group()
+        if token == "[":
+            return "[true" if raw[match.end():].lstrip().startswith("]") else "[true,"
+        return ",true]" if token == "]" else token
+
+    return re.sub(r'"(?:\\.|[^"\\])*"|\[|\]', replace, raw)
+
+
+fixture_dir = root / "tests/fixtures/neptun-ws"
+fixtures = {
+    name: (fixture_dir / f"{name}.jsonl").read_text().splitlines()
+    for name in ("session-1", "session-2")
+}
+fixtures["cases"] = json.loads((fixture_dir / "synthetic-cases.json").read_text())
+fixtures["cases"] += json.loads((fixture_dir / "validation-cases.json").read_text())
+fixtures["projection"] = json.loads((fixture_dir / "projection-cases.json").read_text())
+fixtures["service"] = json.loads((fixture_dir / "service-cases.json").read_text())
+fixtures["threats"] = json.loads((fixture_dir / "threat-notifications.json").read_text())
+json_values = {}
+for raw in fixtures["session-1"] + fixtures["session-2"] + [case["raw"] for case in fixtures["cases"] + fixtures["projection"] + fixtures["service"] + fixtures["threats"]]:
+    tagged = tagged_json(raw)
+    try:
+        json_values[tagged] = json.loads(tagged)
+    except json.JSONDecodeError:
+        pass
+sources.append("local wsFixtures = " + luau_value(fixtures))
+sources.append("local wsJsonValues = " + luau_value(json_values))
 sources.append((root / "tests/checks.luau").read_text())
+sources.append("do\n" + (root / "tests/transport.luau").read_text() + "\nend")
+sources.append("do\n" + (root / "tests/ws-events.luau").read_text() + "\nend")
+
+sources.append("do\n" + (root / "tests/ws-status.luau").read_text() + "\nend")
+
+sources.append("do\n" + (root / "tests/ws-freshness.luau").read_text() + "\nend")
+sources.append("do\n" + (root / "tests/geolocation.luau").read_text() + "\nend")
+sources.append("do\n" + (root / "tests/threat-notifications.luau").read_text() + "\nend")
+sources.append("do\n" + (root / "tests/threat-panel.luau").read_text() + "\nend")
+
+
+sources.append("do\n" + (root / "tests/panel-placement.luau").read_text() + "\nend")
 
 with tempfile.TemporaryDirectory(prefix="air-alert-tests-") as directory:
     script = Path(directory) / "checks.luau"
