@@ -11,7 +11,7 @@ Air raid alerts and current threats for Ukrainian oblasts and districts, powered
 
 **The plugin requires external dependencies; they are not installed automatically.**
 
-- Noctalia with plugin API 24 or newer and its `noctalia` command in `PATH`.
+- Noctalia with plugin API 42 or newer and its `noctalia` command in `PATH`.
 - **`websocat`** in Noctalia's `PATH` for live updates. Install it with your system
   package manager before enabling the plugin.
 - `xdg-open` (usually provided by `xdg-utils`) to open the source website.
@@ -25,6 +25,8 @@ Air raid alerts and current threats for Ukrainian oblasts and districts, powered
    location through Noctalia; check the suggested location before saving.
 
 Left-click for status and current threats; right-click to change your location.
+Panels fit their content up to 600 logical px for status and 380 for location
+selection, with scrolling when needed.
 
 ### Settings
 

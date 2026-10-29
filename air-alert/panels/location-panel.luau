@@ -155,7 +155,7 @@ render = function(): ()
             onClick = save,
         })
     )
-    panel.render(ui.column({ gap = 8 }, children))
+    panel.render(ui.scroll({ key = "location-scroll", flexGrow = 1, gap = 8 }, children))
 end
 
 local function onOpen(): ()
@@ -169,6 +169,8 @@ end
 local function onClose(): ()
     isOpen = false
     cancelLookup()
+    -- Noctalia restores the retained tree before onOpen; start content sizing from an empty tree.
+    panel.render(ui.column({}))
 end
 
 noctalia.state.watch(store.stateKey, function(key: string?): ()

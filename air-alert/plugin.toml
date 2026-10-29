@@ -1,7 +1,7 @@
 id = "dmich/air-alert"
 name = "Air Alert"
 version = "1.0.0"
-plugin_api = 24
+plugin_api = 42
 author = "dmich"
 
 [[setting]]
@@ -57,7 +57,8 @@ options = [
 id = "alert-details"
 entry = "status-panel-entry.luau"
 width = 450
-height = 600
+height = "content"
+max_height = 600
 placement = "floating"
 open_near_click = true
 keyboard_focus = "exclusive"
@@ -66,17 +67,19 @@ keyboard_focus = "exclusive"
 id = "location-picker"
 entry = "location-panel-entry.luau"
 width = 340
-height = 380
+height = "content"
+max_height = 380
 placement = "floating"
 open_near_click = true
 keyboard_focus = "exclusive"
 
-# API 24 fixes placement per entry; navigation selects the shared setting's variant.
+# Placement is fixed per entry; navigation selects the shared setting's variant.
 [[panel]]
 id = "alert-details-attached"
 entry = "status-panel-entry.luau"
 width = 450
-height = 600
+height = "content"
+max_height = 600
 placement = "attached"
 open_near_click = true
 keyboard_focus = "exclusive"
@@ -85,7 +88,8 @@ keyboard_focus = "exclusive"
 id = "location-picker-attached"
 entry = "location-panel-entry.luau"
 width = 340
-height = 380
+height = "content"
+max_height = 380
 placement = "attached"
 open_near_click = true
 keyboard_focus = "exclusive"

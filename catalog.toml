@@ -4,4 +4,4 @@ name = "Air Alert"
 version = "1.0.0"
 author = "dmich"
 description = "Oblast and district air raid alerts in Ukraine from NEPTUN."
-plugin_api = 24
+plugin_api = 42

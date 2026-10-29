@@ -156,7 +156,7 @@ local function render(): ()
     end
     table.insert(
         children,
-        ui.scroll({ key = "current-threats-scroll", height = 240, flexGrow = 1 }, {
+        ui.scroll({ key = "current-threats-scroll", flexGrow = 1 }, {
             ui.column({ gap = 8 }, threatChildren),
         })
     )
@@ -206,6 +206,8 @@ end
 
 local function onClose(): ()
     isOpen = false
+    -- Noctalia restores the retained tree before onOpen; start content sizing from an empty tree.
+    panel.render(ui.column({}))
 end
 
 local function update(): ()

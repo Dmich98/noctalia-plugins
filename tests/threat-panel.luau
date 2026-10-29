@@ -54,7 +54,10 @@ local title = node(panel, "current-threat-title:new-local").props
 assert(title.text == "Шахед ×2" and title.fontWeight == "bold")
 assert(node(panel, "current-threats-title").props.text == "Загрози · 2")
 local scroll = assert(node(panel, "current-threats-scroll"))
-assert(scroll.kind == "scroll" and scroll.props.flexGrow == 1 and scroll.props.height == 240)
+assert(
+    scroll.kind == "scroll" and scroll.props.flexGrow == 1 and scroll.props.height == nil,
+    "threats use their content height and scroll when the panel reaches max_height"
+)
 assert(node(panel, "current-threats-divider").kind == "separator")
 assert(findNode(scroll, function(child)
     return child.props and child.props.key == "current-threat:new-local"
@@ -115,6 +118,10 @@ assert(target(panel, "baseline-local") and not target(panel, "baseline-outside")
 assert(service.streamAttempts == 1 and panel.streamAttempts == 0 and other.streamAttempts == 0)
 assert(#service.requests == 0 and #panel.requests == 0 and #other.requests == 0)
 panel.onClose()
+assert(
+    panel.tree.kind == "column" and #(panel.tree.children or {}) == 0,
+    "closing clears the retained tree before the next content-sized open"
+)
 local closedTree = panel.tree
 push(service, "empty-snapshot")
 assert(panel.tree == closedTree, "closed panels do not render in response to target updates")

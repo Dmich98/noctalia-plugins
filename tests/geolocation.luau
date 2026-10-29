@@ -89,6 +89,12 @@ local function response(index, value, ok, statusCode)
     picker.requests[index].callback({ ok = ok ~= false, status = statusCode or 200, body = "geo" })
 end
 picker.onOpen()
+assert(
+    picker.tree.kind == "scroll"
+        and picker.tree.props.flexGrow == 1
+        and picker.tree.props.height == nil,
+    "location form fits content and can scroll at max_height"
+)
 assert(#picker.requests == 0)
 control("geolocate").onClick()
 assert(#picker.requests == 1 and not control("geolocate").enabled)
@@ -114,6 +120,10 @@ response(2, { lat = 49.8397, lng = 24.0297 })
 assert(control("location").selectedIndex == kyiv and control("district").selectedIndex == 0)
 control("geolocate").onClick()
 picker.onClose()
+assert(
+    picker.tree.kind == "column" and #(picker.tree.children or {}) == 0,
+    "closing clears the retained tree before the next content-sized open"
+)
 picker.onOpen()
 response(3, { lat = 49.8397, lng = 24.0297 })
 assert(control("district").options[control("district").selectedIndex + 1] == "Бориспільський район")
